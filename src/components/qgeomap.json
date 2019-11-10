@@ -1,0 +1,58 @@
+{
+  "type": "component",
+  "props": {
+    "editable": {
+      "type": "Boolean",
+      "desc": "Allow editing of geometries? Default: false.",
+      "default": false
+    },
+    "mousePos": {
+      "type": "Object",
+      "desc": "Display a special marker for this given position. Example: {latLon: [36.73, -121.9], radius: 5}",
+      "default": null
+    }
+  },
+  "events": {
+    "warning": {
+      "desc": "Emitted to notify of some warning.",
+      "params": {
+        "value": {
+          "type": "String",
+          "desc": "Warning message"
+        }
+      }
+    }
+  },
+  "methods": {
+    "addEntry": {
+      "desc": "Adds an entry to the map",
+      "params": {
+        "entry": {
+          "type": "Object",
+          "required": true,
+          "desc": "Entry to be added. Must have an `entry_id` attribute to uniquely identify the entry."
+        }
+      }
+    },
+    "removeEntry": {
+      "desc": "Removes an entry from the map",
+      "params": {
+        "entry_id": {
+          "type": "String",
+          "required": true,
+          "desc": "ID of the entry to be removed."
+        }
+      }
+    },
+    "editEntry": {
+      "desc": "Starts editing mode for the given entry",
+      "params": {
+        "entry_id": {
+          "type": "String",
+          "required": true,
+          "desc": "ID of the entry to be esited."
+        }
+      }
+    }
+  }
+}
