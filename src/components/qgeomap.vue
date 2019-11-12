@@ -13,12 +13,12 @@
         :editable="editable"
         :selection-for-editing="!!selectedEntryId"
         :is-editing="isEditing()"
-        v-on:doZoom="doZoom"
+        v-on:doZoom="_doZoom"
         v-on:zoomToAll="zoomToAll"
         v-on:zoomToAllSelected="zoomToAllSelected"
         v-on:startEditing="startEditing"
-        v-on:applyEdits="applyEdits"
-        v-on:cancelEdits="cancelEdits"
+        v-on:applyEdits="_applyEdits"
+        v-on:cancelEdits="_cancelEdits"
       />
 
       <l-feature-group ref="staticFeatureGroup">
@@ -59,6 +59,8 @@
     LGeoJson,
   } from 'vue2-leaflet'
 
+  import { createMapMan } from './mapman.js'
+
   import cloneDeep from 'lodash/cloneDeep'
   import get from 'lodash/get'
   import findIndex from 'lodash/findIndex'
@@ -71,6 +73,8 @@
     name: 'qgeomap',
 
     mapObject: null,
+
+    mapMan: null,
 
     components: {
       LMap,
@@ -121,7 +125,7 @@
 
         if (debug) console.debug(`qgeomap mounted:`, 'map=', map)
 
-        this.$mapMan.setupMap(map, drawFeatureGroup)
+        this.mapMan = createMapMan(map, drawFeatureGroup)
       })
     },
 
@@ -276,7 +280,7 @@
 
       bringSelectedEntryToFront() {
         if (this.selectedEntryId) {
-          const selectedEntry = this.findAndExtractEntry(this.selectedEntryId)
+          const selectedEntry = this._findAndExtractEntry(this.selectedEntryId)
           console.log("bringSelectedEntryToFront: selectedEntry=", selectedEntry)
           if (selectedEntry) {
             this.entries.push(selectedEntry)
@@ -285,22 +289,22 @@
       },
 
       isEditing() {
-        return this.$mapMan.isEditing()
+        return this.mapMan && this.mapMan.isEditing()
       },
 
       startEditing() {
         if (this.selectedEntryId) {
-          let entry = this.findAndExtractEntry(this.selectedEntryId)
+          let entry = this._findAndExtractEntry(this.selectedEntryId)
           console.log("startEditing: entry=", entry, 'selectedEntryId=', this.selectedEntryId)
           if (entry) {
-            this.setEntriesInteractive(false)
-            this.$mapMan.startEditing(entry)
+            this._setEntriesInteractive(false)
+            this.mapMan.startEditing(entry)
           }
         }
         else this.$emit('warning', 'Select the entry whose geometries you want to edit')
       },
 
-      setEntriesInteractive(interactive = true) {
+      _setEntriesInteractive(interactive = true) {
         const saveEntries = this.entries;
         this.entries = []
         this.$nextTick(() => {
@@ -312,9 +316,9 @@
         })
       },
 
-      applyEdits() {
-        const prevEntry = this.$mapMan.endEditing()
-        console.log("applyEdits: prevEntry=", prevEntry)
+      _applyEdits() {
+        const prevEntry = this.mapMan.endEditing()
+        console.log("_applyEdits: prevEntry=", prevEntry)
         if (prevEntry) {
           const {entryEdited, geometry} = prevEntry
 
@@ -324,37 +328,32 @@
           entryEdited.geometry = geometry
           this.entries.push(entryEdited)
         }
-        this.setEntriesInteractive()
+        this._setEntriesInteractive()
       },
 
-      cancelEdits() {
-        const prevEntry = this.$mapMan.endEditing()
-        console.log("cancelEdits: prevEntry=", prevEntry)
+      _cancelEdits() {
+        const prevEntry = this.mapMan.endEditing()
+        console.log("_cancelEdits: prevEntry=", prevEntry)
         if (prevEntry) {
           const {entryEdited} = prevEntry
           this.entries.push(entryEdited)
           // this.$timelineWidget.enableSelectionAndEditing()
         }
-        this.setEntriesInteractive()
+        this._setEntriesInteractive()
       },
 
-      findEntryIndex(selectedEntryId) {
+      _findEntryIndex(selectedEntryId) {
         return findIndex(this.entries, entry =>
             selectedEntryId === entry.entry_id
         )
       },
 
-      findAndExtractEntry(selectedEntryId) {
-        const index = this.findEntryIndex(selectedEntryId)
+      _findAndExtractEntry(selectedEntryId) {
+        const index = this._findEntryIndex(selectedEntryId)
         if (index >= 0) {
           const [entry] = this.entries.splice(index, 1)
           return entry
         }
-      },
-
-      onCenterMapAt (latLon) {
-        console.log('ON onCenterMapAt: latLon=', latLon)
-        this.center = latLon
       },
 
       zoomToAll() {
@@ -365,17 +364,21 @@
         this.mapObject.fitBounds(bounds, {maxZoom: 11})
       },
 
+      zoomToEdited() {
+        return this.mapMan && this.mapMan.zoomToEdited()
+      },
+
       zoomToAllSelected() {
         let message = null
 
         if (this.isEditing()) {
-          if (!this.$mapMan.zoomToEdited()) {
+          if (!this.zoomToEdited()) {
             message = 'No geometries associated'
           }
         }
         else if (this.selectedEntryId) {
           // TODO index should just be this.entries.length - 1.
-          const index = this.findEntryIndex(this.selectedEntryId)
+          const index = this._findEntryIndex(this.selectedEntryId)
           if (index >= 0) {
             const ref = this.$refs[`entry_${index}`]
             // console.log('zoomToAllSelected: ref=', ref)
@@ -401,7 +404,7 @@
         }
       },
 
-      doZoom(out) {
+      _doZoom(out) {
         const map = this.$refs.gjMap.mapObject
         out ? map.zoomOut() : map.zoomIn()
       },
