@@ -22,15 +22,17 @@ import each from 'lodash/each'
 
 const debug = window.location.search.match(/.*debug=.*qgeomap.*/)
 
-const createDrawControl = featureGroup => {
-  try {
-    // adjust these messages to avoid the 'Save' term:
-    L.drawLocal.edit.toolbar.actions.save.text = 'Apply'
-    L.drawLocal.edit.toolbar.actions.save.title = 'Apply the changes'
-  }
-  catch(error) {
-    console.warn(error)
-  }
+try {
+  // adjust these messages to avoid the 'Save' term:
+  L.drawLocal.edit.toolbar.actions.save.text = 'Apply'
+  L.drawLocal.edit.toolbar.actions.save.title = 'Apply the changes'
+}
+catch(error) {
+  console.warn(error)
+}
+
+function createDrawControl(featureGroup, entry) {
+  console.log('createDrawControl: entry=', entry)
 
   const repeatMode = true
 
@@ -56,7 +58,7 @@ const createDrawControl = featureGroup => {
     draw: {
       circle: {
         shapeOptions: {
-          color: '#f357a1',
+          color: entry.color || '#f357a1',
           weight: 4,
         },
         showArea: true,
@@ -72,14 +74,14 @@ const createDrawControl = featureGroup => {
       },
       rectangle: {
         shapeOptions: {
-          color: '#f357a1',
+          color: entry.color || '#ff0000',
           weight: 4
         },
         showArea: true,
       },
       polyline: {
         shapeOptions: {
-          color: '#f357a1',
+          color: entry.color || '#f357a1',
           weight: 4
         },
       },
@@ -89,7 +91,7 @@ const createDrawControl = featureGroup => {
           color: '#e1e100', // Color the shape will turn when intersects
         },
         shapeOptions: {
-          color: '#bada55'
+          color: entry.color || '#bada55'
         },
         showArea: true,
       },
@@ -114,9 +116,7 @@ function setupMap(map_, drawFeatureGroup_) {
   mousePosition.addToMap(map)
   initBaseLayers()
 
-  drawControl = createDrawControl(drawFeatureGroup)
   if (debug) console.debug('setupMap: drawFeatureGroup=', drawFeatureGroup)
-  endEditing()
 
   map.on(L.Draw.Event.CREATED, e => {
     console.warn('L.Draw.Event.CREATED', e)
@@ -131,13 +131,13 @@ function isEditing() {
 
 function startEditing(entry) {
   const prevEntry = entryEdited
-  if (prevEntry) {
-    endEditing()
-  }
+
+  endEditing()
 
   if (entry) {
     entryEdited = entry
     addLayersToDraw(entryEdited)
+    drawControl = createDrawControl(drawFeatureGroup, entry)
     map.addControl(drawControl)
   }
 
@@ -145,7 +145,10 @@ function startEditing(entry) {
 }
 
 function endEditing() {
-  map.removeControl(drawControl)
+  if (drawControl) {
+    map.removeControl(drawControl)
+    drawControl = null
+  }
   let ret = null
   if (entryEdited) {
     const geometry = drawGroupToGeoJSON()
@@ -221,18 +224,18 @@ function initBaseLayers() {
   const gSatelliteLayer = L.gridLayer.googleMutant({type: 'satellite'})
 
   // TODO leaflet or esri bug? radio button 'ESRI Oceans' seems to be always pre-selected
-  // if 'ESRI Oceans' is added, even though we are adding oceans-with-labels 1st and to the map.
-  // Also, a 2nd click on oceans-with-labels brings the one with only the labels!
+  // if 'ESRI Oceans' is added (B1), and 'ESRI Oceans/Labels' is  added to the map (B2).
+  // Also, a 2nd click on 'ESRI Oceans/Labels' brings the one with only the labels!
   const baseLayers = {
     'ESRI Oceans/Labels': esriOceansWithLabelsLayer,
-    // 'ESRI Oceans': esriOceansLayer,
+    // 'ESRI Oceans': esriOceansLayer, /*(B1)*/
     'OpenStreetMap': osmLayer,
     'Google hybrid': gHybridLayer,
     'Google satellite': gSatelliteLayer,
   }
   const controlLayers = L.control.layers(baseLayers).addTo(map)
 
-  let baseLayerName = 'Google satellite'
+  let baseLayerName = 'Google satellite'   // 'ESRI Oceans/Labels'  /*(B2)*/
   baseLayers[baseLayerName].addTo(map)
 }
 

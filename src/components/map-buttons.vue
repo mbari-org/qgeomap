@@ -8,7 +8,7 @@
         <q-btn
           v-if="editable"
           icon="edit" dense glossy size="sm"
-          :color="selectedToken ? 'yellow-7' : 'yellow-2'"
+          :color="selectionForEditing ? 'yellow-7' : 'yellow-2'"
           class="shadow-8 q-mr-lg text-black"
           :disable="isEditing"
           @click.stop.prevent="$emit('startEditing')"
@@ -64,10 +64,10 @@
       <div>
         <q-btn
           dense glossy size="sm"
-          :color="selectedToken ? 'yellow-7' : 'yellow-2'"
+          :color="selectionForEditing ? 'yellow-7' : 'yellow-2'"
           icon="center_focus_weak"
           class="shadow-8 q-mb-xs text-black"
-          @click.stop.prevent="$emit('zoomToAllSelectedToken')"
+          @click.stop.prevent="$emit('zoomToAllSelected')"
         />
         <q-tooltip anchor="center left" self="center right">
           Zoom to all selected geometries
@@ -117,9 +117,9 @@
         default: false
       },
 
-      selectedToken: {
-        type: Object,
-        default: null
+      selectionForEditing: {
+        type: Boolean,
+        default: false
       },
     },
   }

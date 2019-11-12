@@ -11,10 +11,11 @@
     >
       <map-buttons
         :editable="editable"
+        :selection-for-editing="!!selectedEntryId"
         :is-editing="isEditing()"
         v-on:doZoom="doZoom"
         v-on:zoomToAll="zoomToAll"
-        v-on:zoomToAllSelectedToken="zoomToAllSelectedToken"
+        v-on:zoomToAllSelected="zoomToAllSelected"
         v-on:startEditing="startEditing"
         v-on:applyEdits="applyEdits"
         v-on:cancelEdits="cancelEdits"
@@ -364,7 +365,7 @@
         this.mapObject.fitBounds(bounds, {maxZoom: 11})
       },
 
-      zoomToAllSelectedToken() {
+      zoomToAllSelected() {
         let message = null
 
         if (this.isEditing()) {
@@ -377,7 +378,7 @@
           const index = this.findEntryIndex(this.selectedEntryId)
           if (index >= 0) {
             const ref = this.$refs[`entry_${index}`]
-            console.log('zoomToAllSelectedToken: ref=', ref)
+            // console.log('zoomToAllSelected: ref=', ref)
             const llObj = ref.length && ref[0]
             if (llObj) {
               if (llObj.getBounds) {
