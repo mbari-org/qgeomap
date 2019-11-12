@@ -1,54 +1,75 @@
 <template>
-  <div
-    class="gjMap"
-    :style="`width:${mapWidth};height:${mapHeight}`"
-  >
-    <l-map
-      ref="gjMap"
-      :zoom="zoom"
-      :center="center"
-      :options="{zoomControl:false, attributionControl: false}"
-    >
-      <map-buttons
-        :editable="editable"
-        :selection-for-editing="!!selectedEntryId"
-        :is-editing="isEditing()"
-        v-on:doZoom="_doZoom"
-        v-on:zoomToAll="zoomToAll"
-        v-on:zoomToAllSelected="zoomToAllSelected"
-        v-on:startEditing="startEditing"
-        v-on:applyEdits="_applyEdits"
-        v-on:cancelEdits="_cancelEdits"
-      />
-
-      <l-feature-group ref="staticFeatureGroup">
-        <l-geo-json
-          v-for="(entry, index) in entries"
-          :key="`entry_${index}`"
-          :ref="`entry_${index}`"
-          :geojson="entry.geometry"
-          :options="entry.options"
+  <table style="height:100%; width:100%">
+    <tbody>
+    <tr style="height:100%; width:100%">
+      <td>
+        <div
+          class="gjMap fit"
+          :style="`width:${mapWidth};height:${mapHeight}`"
         >
-        </l-geo-json>
-      </l-feature-group>
+          <l-map
+            ref="gjMap"
+            :zoom="zoom"
+            :center="center"
+            :options="{zoomControl:false, attributionControl: false}"
+          >
+            <map-buttons
+              :editable="editable"
+              :selection-for-editing="!!selectedEntry"
+              :is-editing="isEditing()"
+              v-on:doZoom="_doZoom"
+              v-on:zoomToAll="zoomToAll"
+              v-on:zoomToAllSelected="zoomToAllSelected"
+              v-on:startEditing="startEditing"
+              v-on:applyEdits="_applyEdits"
+              v-on:cancelEdits="_cancelEdits"
+            />
 
-      <l-feature-group ref="drawFeatureGroup">
-      </l-feature-group>
+            <l-feature-group ref="staticFeatureGroup">
+              <l-geo-json
+                v-for="(entry, index) in entries"
+                :key="`entry_${index}`"
+                :ref="`entry_${index}`"
+                :geojson="entry.geometry"
+                :options="entry.options"
+              >
+              </l-geo-json>
+            </l-feature-group>
 
-      <slot name="map-body">
-        <mouse-pos-marker
-          :mouse-pos="mousePos"
+            <l-feature-group ref="drawFeatureGroup">
+            </l-feature-group>
+
+            <slot name="map-body">
+              <mouse-pos-marker
+                :mouse-pos="mousePosFromCoordsTable || mousePos"
+              />
+            </slot>
+
+          </l-map>
+
+        </div>
+      </td>
+      <td
+        v-if="includeTable && selectedEntry && selectedFeature"
+        :style="`width:${tableWidth}`"
+      >
+        <coords-table
+          class="q-ma-xs"
+          :entry="selectedEntry"
+          :feature="selectedFeature"
+          v-on:mousePos="onMousePosFromCoordsTable"
+          v-on:centerMapAt="_centerMapAt"
         />
-      </slot>
-
-    </l-map>
-
-  </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 </template>
 
 <script>
   import MapButtons from '@mbari/quasar-app-extension-qgeomap/src/components/map-buttons'
   import MousePosMarker from '@mbari/quasar-app-extension-qgeomap/src/components/mouse-pos-marker'
+  import CoordsTable from '@mbari/quasar-app-extension-qgeomap/src/components/coords-table'
 
   // import Vue2LeafletGoogleMutant from 'vue2-leaflet-googlemutant'
 
@@ -84,6 +105,7 @@
 
       MapButtons,
       MousePosMarker,
+      CoordsTable,
     },
 
     props: {
@@ -92,14 +114,9 @@
         default: false
       },
 
-      mapWidth: {
-        type: String,
-        default: '1200px'
-      },
-
-      mapHeight: {
-        type: String,
-        default: '900px'
+      includeTable: {
+        type: Boolean,
+        default: false
       },
 
       mousePos: {
@@ -108,13 +125,35 @@
       },
     },
 
+    computed: {
+      tableWidth() {
+        return `70px`
+      },
+
+      mapWidth() {
+        if (this.includeTable && this.selectedEntry && this.selectedFeature) {
+          return `calc(100% - ${this.tableWidth})`
+        }
+        else {
+          return `100%`
+        }
+      },
+
+      mapHeight() {
+        return `100%`
+      },
+    },
+
     data: () => ({
       center: [36.83, -121.9],
       zoom: 10,
 
-      selectedEntryId: null,
+      selectedEntry: null,
+      selectedFeature: null,
 
       entries: [],
+
+      mousePosFromCoordsTable: null,
     }),
 
     mounted() {
@@ -195,15 +234,13 @@
           })
 
           layer.on('click', e => {
+            this.selectedFeature = e.target.feature
             this.entrySelection(entry)
           })
 
           layer.on('dblclick', e => {
-            // console.log('dblclick e=', e)
-            if (e.target.feature) {
-              L.DomEvent.stop(e)
-              this.openCoordsDialog(entry, e.target.feature)
-            }
+            // just ignore
+            L.DomEvent.stop(e)
           })
 
           entry.layers.push(layer)
@@ -238,53 +275,40 @@
         else this.$emit('warning', `No entry by id: '${entry_id}'`)
       },
 
-      openCoordsDialog(entry, feature) {
-        console.warn('openCoordsDialog:', 'entry=', entry, 'feature=', feature)
-
-        switch (feature.geometry.type) {
-          case 'Polygon': {
-            this.$refs['coords-dialog'].openCoordsDialog(entry, feature)
-            break
-          }
-
-          case 'LineString': {
-            this.$refs['coords-dialog'].openCoordsDialog(entry, feature)
-            break
-          }
-
-          case 'Point': {
-            if (get(feature, 'properties.radius')) {
-              this.$refs['circle-dialog'].openCircleDialog(entry, feature)
-            }
-            else {
-              this.$refs['coords-dialog'].openCoordsDialog(entry, feature)
-            }
-            break
-          }
-        }
+      onMousePosFromCoordsTable(p) {
+        // console.log("onMousePosFromCoordsTable: p=", p)
+        this.mousePosFromCoordsTable = p ? {latLon: p, radius: 5} : null
       },
 
       entrySelection(entry) {
-        console.log("entrySelection: entry=", entry)
-        // TODO check any ongoing editing
+        console.log("entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
+
+        if (this.isEditing()) {
+          // TODO proper handling if editing
+          // For now, ignoring.
+          return
+        }
+
+        // if (this.selectedEntry && this.selectedEntry.entry_id === entry.entry_id) {
+        //   this.selectedEntry = null
+        //   this.selectedFeature = null
+        //   return
+        // }
 
         // only reflect selection on map if entry_id given
         if (entry.entry_id) {
-          this.selectedEntryId = entry.entry_id
+          this.selectedEntry = entry
         }
         else {
-          this.selectedEntryId = null
+          this.selectedEntry = null
         }
         this.bringSelectedEntryToFront()
       },
 
       bringSelectedEntryToFront() {
-        if (this.selectedEntryId) {
-          const selectedEntry = this._findAndExtractEntry(this.selectedEntryId)
-          console.log("bringSelectedEntryToFront: selectedEntry=", selectedEntry)
-          if (selectedEntry) {
-            this.entries.push(selectedEntry)
-          }
+        if (this.selectedEntry) {
+          this._findAndExtractEntry(this.selectedEntry.entry_id)
+          this.entries.push(this.selectedEntry)
         }
       },
 
@@ -293,18 +317,16 @@
       },
 
       startEditing() {
-        if (this.selectedEntryId) {
-          let entry = this._findAndExtractEntry(this.selectedEntryId)
-          console.log("startEditing: entry=", entry, 'selectedEntryId=', this.selectedEntryId)
-          if (entry) {
-            this._setEntriesInteractive(false)
-            this.mapMan.startEditing(entry)
-          }
+        if (this.selectedEntry) {
+          this._findAndExtractEntry(this.selectedEntry.entry_id)
+          console.log('startEditing:', 'selectedEntry=', this.selectedEntry)
+          this._setEntriesInteractive(false)
+          this.mapMan.startEditing(this.selectedEntry)
         }
         else this.$emit('warning', 'Select the entry whose geometries you want to edit')
       },
 
-      _setEntriesInteractive(interactive = true) {
+      _setEntriesInteractive(interactive) {
         const saveEntries = this.entries;
         this.entries = []
         this.$nextTick(() => {
@@ -327,8 +349,9 @@
           // reflect updated geometryL
           entryEdited.geometry = geometry
           this.entries.push(entryEdited)
+          this.selectedEntry = entryEdited
         }
-        this._setEntriesInteractive()
+        this._setEntriesInteractive(true)
       },
 
       _cancelEdits() {
@@ -339,17 +362,17 @@
           this.entries.push(entryEdited)
           // this.$timelineWidget.enableSelectionAndEditing()
         }
-        this._setEntriesInteractive()
+        this._setEntriesInteractive(true)
       },
 
-      _findEntryIndex(selectedEntryId) {
+      _findEntryIndex(entry_id) {
         return findIndex(this.entries, entry =>
-            selectedEntryId === entry.entry_id
+            entry_id === entry.entry_id
         )
       },
 
-      _findAndExtractEntry(selectedEntryId) {
-        const index = this._findEntryIndex(selectedEntryId)
+      _findAndExtractEntry(entry_id) {
+        const index = this._findEntryIndex(entry_id)
         if (index >= 0) {
           const [entry] = this.entries.splice(index, 1)
           return entry
@@ -376,9 +399,9 @@
             message = 'No geometries associated'
           }
         }
-        else if (this.selectedEntryId) {
+        else if (this.selectedEntry) {
           // TODO index should just be this.entries.length - 1.
-          const index = this._findEntryIndex(this.selectedEntryId)
+          const index = this._findEntryIndex(this.selectedEntry.entry_id)
           if (index >= 0) {
             const ref = this.$refs[`entry_${index}`]
             // console.log('zoomToAllSelected: ref=', ref)
@@ -407,6 +430,11 @@
       _doZoom(out) {
         const map = this.$refs.gjMap.mapObject
         out ? map.zoomOut() : map.zoomIn()
+      },
+
+      _centerMapAt(latLon) {
+        console.log('_centerMapAt', latLon)
+        this.center = latLon
       },
     },
   }
