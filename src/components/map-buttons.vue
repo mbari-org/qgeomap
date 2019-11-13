@@ -7,15 +7,21 @@
       <div>
         <q-btn
           v-if="editable"
-          icon="edit" dense glossy size="sm"
-          :color="selectionForEditing ? 'yellow-7' : 'yellow-2'"
+          :icon="selectionForEditing ? 'edit' : 'library_add'"
+          dense glossy size="sm"
+          color="yellow-7"
           class="shadow-8 q-mr-lg text-black"
           :disable="isEditing"
-          @click.stop.prevent="$emit('startEditing')"
+          @click.stop.prevent="$emit(selectionForEditing ? 'startEditing' : 'startAdding')"
         />
         <!--separate tooltip to avoid issue of having it open forever sometimes -->
         <q-tooltip anchor="center left" self="center right">
-          Edit selected geometries
+          <span v-if="selectionForEditing">
+            Edit selected geometries
+          </span>
+          <span v-else>
+            Add a geometry
+          </span>
         </q-tooltip>
       </div>
 
@@ -63,14 +69,15 @@
     >
       <div>
         <q-btn
+          v-if="selectionForEditing"
           dense glossy size="sm"
-          :color="selectionForEditing ? 'yellow-7' : 'yellow-2'"
+          color="yellow-7"
           icon="center_focus_weak"
           class="shadow-8 q-mb-xs text-black"
           @click.stop.prevent="$emit('zoomToAllSelected')"
         />
         <q-tooltip anchor="center left" self="center right">
-          Zoom to all selected geometries
+          Zoom to selected geometry
         </q-tooltip>
       </div>
 

@@ -2,6 +2,19 @@
   <table style="height:100%; width:100%">
     <tbody>
     <tr style="height:100%; width:100%">
+      <td
+        v-if="includeTable && selectedEntry && selectedFeature"
+        :style="`width:${tableWidth}`"
+      >
+        <coords-table
+          :entry="selectedEntry"
+          :feature="selectedFeature"
+          :editable="editable && !isEditing()"
+          v-on:mousePos="_mousePosFromCoordsTable"
+          v-on:centerMapAt="_centerMapAt"
+          v-on:updatedFeature="_updatedFeature"
+        />
+      </td>
       <td>
         <div
           class="gjMap fit"
@@ -21,6 +34,7 @@
               v-on:zoomToAll="zoomToAll"
               v-on:zoomToAllSelected="zoomToAllSelected"
               v-on:startEditing="startEditing"
+              v-on:startAdding="startAdding"
               v-on:applyEdits="_applyEdits"
               v-on:cancelEdits="_cancelEdits"
             />
@@ -48,19 +62,6 @@
           </l-map>
 
         </div>
-      </td>
-      <td
-        v-if="includeTable && selectedEntry && selectedFeature"
-        :style="`width:${tableWidth}`"
-      >
-        <coords-table
-          :entry="selectedEntry"
-          :feature="selectedFeature"
-          :editable="editable && !isEditing()"
-          v-on:mousePos="_mousePosFromCoordsTable"
-          v-on:centerMapAt="_centerMapAt"
-          v-on:updatedFeature="_updatedFeature"
-        />
       </td>
     </tr>
     </tbody>
@@ -281,16 +282,16 @@
         else this.$emit('warning', `No entry by id: '${entry_id}'`)
       },
 
-      editNew(geomType) {
+      editNew(geomType, entry_id) {
         if (!this.editable) {
           this.$emit('warning', 'not editable')
           return
         }
 
-        console.log("editNew: geomType=", geomType)
+        console.log("editNew: geomType=", geomType, 'entry_id=', entry_id)
 
         const entry = {
-          entry_id: 'NEW_entry_id',
+          entry_id,
           color: 'yellow',
           tooltip: `new of type ${geomType}`,
           is_new: {
@@ -345,6 +346,13 @@
           this.mapMan.startEditing(this.selectedEntry)
         }
         else this.$emit('warning', 'Select the geometry you want to edit')
+      },
+
+      startAdding() {
+        if (!this.selectedEntry) {
+          this.$emit('startAdding')
+        }
+        else this.$emit('warning', 'Unselect any geometry to add new one')
       },
 
       _setEntriesInteractive(interactive) {
@@ -483,7 +491,7 @@
 
 <style>
   .gjMap {
-    border: 1px solid red;
+    border: 1px solid black;
     /*overflow: auto;*/
   }
 

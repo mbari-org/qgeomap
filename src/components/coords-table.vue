@@ -1,19 +1,20 @@
 <template>
-  <q-page>
+  <q-page class="bg-blue-1">
     <q-toolbar class="bg-primary text-white">
       <q-toolbar-title style="font-size:1.1em">
         {{ entry.entry_id }}
       </q-toolbar-title>
-      <div class="text-grey" style="font-size:0.8em">{{ displayType }}</div>
+      <div class="text-grey-2" style="font-size:0.8em">{{ displayType }}</div>
     </q-toolbar>
-    <form class="q-mt-sm">
+
+    <form class="q-ma-xs">
 
       <div class="row q-gutter-md">
 
         <div>
-          <div class="text-bold">Center:</div>
+          <div v-if="radius !== null" class="text-bold">Center:</div>
           <q-table
-            dense
+            :dense="$q.screen.lt.md"
             :data="tableData"
             :columns="columns"
             row-key="index"
@@ -77,7 +78,7 @@
 
         <div
           v-if="radius !== null"
-          class="row items-center q-gutter-xs shadow-2 q-pr-sm"
+          class="row items-center q-gutter-xs bg-white shadow-2 q-pr-sm"
         >
           <div class="text-bold">Radius:</div>
           <div class="">
@@ -101,7 +102,7 @@
 
         <pre
           v-if="debug"
-          style="font-size: smaller" class="bg-blue-1"
+          style="font-size: smaller" class="bg-grey-1"
         >feature={{feature}}</pre>
       </div>
     </form>
