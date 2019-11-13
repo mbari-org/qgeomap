@@ -54,7 +54,6 @@
         :style="`width:${tableWidth}`"
       >
         <coords-table
-          class="q-ma-xs"
           :entry="selectedEntry"
           :feature="selectedFeature"
           :editable="editable && !isEditing()"
