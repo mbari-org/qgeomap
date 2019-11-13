@@ -194,8 +194,6 @@
 
         entry.layers = []
 
-        const vm = this
-
         entry.weight = entry.weight || 3
 
         entry.options = entry.options || {}
@@ -283,6 +281,27 @@
         else this.$emit('warning', `No entry by id: '${entry_id}'`)
       },
 
+      editNew(geomType) {
+        if (!this.editable) {
+          this.$emit('warning', 'not editable')
+          return
+        }
+
+        console.log("editNew: geomType=", geomType)
+
+        const entry = {
+          entry_id: 'NEW_entry_id',
+          color: 'yellow',
+          tooltip: `new of type ${geomType}`,
+          is_new: {
+            geomType
+          },
+        }
+
+        this.addEntry(entry)
+        this.editEntry(entry.entry_id)
+      },
+
       _mousePosFromCoordsTable(p) {
         // console.log("_mousePosFromCoordsTable: p=", p)
         this.mousePosFromCoordsTable = p ? {latLon: p, radius: 5} : null
@@ -296,12 +315,6 @@
           // For now, ignoring.
           return
         }
-
-        // if (this.selectedEntry && this.selectedEntry.entry_id === entry.entry_id) {
-        //   this.selectedEntry = null
-        //   this.selectedFeature = null
-        //   return
-        // }
 
         // only reflect selection on map if entry_id given
         if (entry.entry_id) {
@@ -331,7 +344,7 @@
           this._setEntriesInteractive(false)
           this.mapMan.startEditing(this.selectedEntry)
         }
-        else this.$emit('warning', 'Select the entry whose geometries you want to edit')
+        else this.$emit('warning', 'Select the geometry you want to edit')
       },
 
       _setEntriesInteractive(interactive) {
@@ -360,7 +373,9 @@
             }
           }
 
-          // reflect updated geometryL
+          delete entryEdited.is_new
+
+          // reflect updated geometry:
           entryEdited.geometry = geometry
           this.entries.push(entryEdited)
           this.selectedEntry = entryEdited
@@ -435,7 +450,7 @@
           else console.warn('Unexpected: no index found for selected entry')
         }
         else {
-          message = 'No selected entry'
+          message = 'No selected geometry'
         }
 
         if (message) {

@@ -9,6 +9,7 @@ import 'leaflet-mouse-position/src/L.Control.MousePosition'
 import 'leaflet-draw'
 import 'leaflet-draw-drag'
 import each from 'lodash/each'
+import get from 'lodash/get'
 
 const debug = window.location.search.match(/.*debug=.*qgeomap.*/)
 
@@ -167,15 +168,44 @@ function createMapMan(map, drawFeatureGroup) {
   }
 }
 
+function getEditModeForEntry(entry) {
+  if (entry.is_new) {
+    return {
+      draw: entry.is_new.geomType
+    }
+  }
+  else if (entry.geometry) {
+    return {
+      edit: getEditMode(entry.geometry)
+    }
+  }
+
+  function getEditMode(geometry) {
+    switch(geometry.type) {
+      case 'Feature':
+        const hasRadius = get(geometry, 'properties.radius')
+        const geomType = get(geometry, 'geometry.type')
+        return hasRadius && geomType === 'Point' ? 'Circle' : getEditMode(geometry.geometry)
+
+      default:
+        return geometry.type
+    }
+  }
+}
+
 function createDrawControl(featureGroup, entry) {
   console.log('createDrawControl: entry=', entry)
 
-  const repeatMode = true
+  const editMode = getEditModeForEntry(entry)
+  console.log('createDrawControl: editMode=', editMode)
 
-  const options = {
-    position: 'topleft',
+  // TODO use editMode to set the following as appropriate
 
-    edit: {
+  let edit = null
+  let draw = null
+
+  if (editMode.edit) {
+    edit = {
       featureGroup,
       edit: {
         selectedPathOptions: {
@@ -192,39 +222,49 @@ function createDrawControl(featureGroup, entry) {
         showArea: true,
       },
       remove: true,
-    },
+    }
+  }
+  else if (editMode.draw) {
+    // TODO determine specific draw options:
 
-    draw: {
-      circle: {
+    const repeatMode = true
+
+    draw = {
+      circle: editMode.draw === 'Circle' ? {
         shapeOptions: {
           color: entry.color || '#f357a1',
           weight: 4,
         },
         showArea: true,
-      },
-      circlemarker: {
+      } : null,
+
+      circlemarker: null/*{
         shapeOptions: {
           weight: 4
         },
         repeatMode,
-      },
-      marker: {
+      }*/,
+
+      marker: null/*{
         repeatMode,
-      },
-      rectangle: {
+      }*/,
+
+      rectangle: editMode.draw === 'Rectangle' ?  {
         shapeOptions: {
           color: entry.color || '#ff0000',
           weight: 4
         },
         showArea: true,
-      },
-      polyline: {
+      } : null,
+
+      polyline: editMode.draw === 'LineString' ? {
         shapeOptions: {
           color: entry.color || '#f357a1',
           weight: 4
         },
-      },
-      polygon: {
+      } : null,
+
+      polygon: editMode.draw === 'Polygon' ? {
         allowIntersection: false, // Restricts shapes to simple polygons
         drawError: {
           color: '#e1e100', // Color the shape will turn when intersects
@@ -233,8 +273,14 @@ function createDrawControl(featureGroup, entry) {
           color: entry.color || '#bada55'
         },
         showArea: true,
-      },
-    },
+      } : null,
+    }
+  }
+
+  const options = {
+    position: 'topleft',
+    edit,
+    draw,
   }
 
   return new L.Control.Draw(options)
