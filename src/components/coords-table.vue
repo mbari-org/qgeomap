@@ -67,6 +67,27 @@
           </template>
         </q-table>
 
+        <div v-if="radius !== null" class="row items-center q-gutter-xs shadow-2 q-pr-sm">
+          <label>Radius:</label>
+          <div class="bg-blue-1 q-ma-sm">
+            {{ radius && radius.toFixed(2) || radius }}
+            <q-popup-edit
+              v-model="radius"
+              :validate="radiusValidation"
+              buttons
+            >
+              <q-input
+                type="number"
+                v-model.number="radius"
+                :error="errorRadius"
+                :error-message="errorMessageRadius"
+                dense autofocus filled
+              />
+            </q-popup-edit>
+          </div>
+          m
+        </div>
+
         <pre
           v-if="debug"
           style="font-size: smaller" class="bg-blue-1"
@@ -80,6 +101,8 @@
   import cloneDeep from 'lodash/cloneDeep'
   import isEqual from 'lodash/isEqual'
   import map from 'lodash/map'
+  import get from 'lodash/get'
+  import set from 'lodash/set'
 
   const debug = true//window.location.search.match(/.*debug=.*qgeomap.*/)
 
@@ -109,8 +132,6 @@
 
         originalFeature: null,
 
-        displayType: '?',
-
         error: null,
         status: null,
 
@@ -124,6 +145,10 @@
         pagination: {
           rowsPerPage: 0
         },
+
+        radius: null,
+        errorRadius: false,
+        errorMessageRadius: null,
       }
     },
 
@@ -137,28 +162,16 @@
 
         this.originalFeature = cloneDeep(this.feature)
 
-        this.displayType = this.feature.geometry.type
-
         this.status = null
         this.error = null
 
         this.tableData = this.getTableData()
       },
 
-      noChanges() {
-        return isEqual(this.feature, this.originalFeature)
-      },
-
-      reflectChanges() {
-        const newFeature = cloneDeep(this.feature)
-        // TODO
-        // const token_id = tid(this.entry.token)
-        // this.$store.commit('model/setTokenGeometry', {token_id, geometry: newFeature})
-      },
-
       getTableData() {
         // console.log('getTableData: feature=', cloneDeep(this.feature))
 
+        this.radius = null
         let list = []
         if (this.feature && this.feature.geometry) {
           // console.log(`getTableData: type=${this.feature.geometry.type}`,
@@ -178,6 +191,8 @@
 
             case 'Point': {
               list = [this.feature.geometry.coordinates]
+
+              this.radius = get(this.feature, 'properties.radius') || null
               break
             }
           }
@@ -187,9 +202,9 @@
         }))
       },
 
-      updateFeature(tableData) {
+      updateFeature() {
         // console.log('updateFeature')
-        const lonlats = map(tableData, ({latitude, longitude}) =>
+        const lonlats = map(this.tableData, ({latitude, longitude}) =>
           [longitude, latitude]
         )
 
@@ -208,6 +223,9 @@
 
           case 'Point': {
             updatedFeature.geometry.coordinates = lonlats[0]
+            if (this.radius !== null && this.radius > 0) {
+              set(updatedFeature, 'properties.radius', +this.radius.toFixed(2))
+            }
             break
           }
         }
@@ -231,6 +249,17 @@
         const latLon = lat !== undefined && lon !== undefined ? [lat, lon] : null
         this.$emit('mousePos', latLon)
       },
+
+      radiusValidation(val) {
+        if (val <= 0) {
+          this.errorRadius = true
+          this.errorMessageRadius = 'The value must positive'
+          return false
+        }
+        this.errorRadius = false
+        this.errorMessageRadius = ''
+        return true
+      },
     },
 
     watch: {
@@ -239,10 +268,14 @@
       },
 
       tableData: {
-        handler(tableData) {
-          this.updateFeature(tableData)
+        handler() {
+          this.updateFeature()
         },
         deep: true,
+      },
+
+      radius() {
+        this.updateFeature()
       },
     },
   }

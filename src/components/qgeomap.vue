@@ -168,6 +168,11 @@
         if (debug) console.debug(`qgeomap mounted:`, 'map=', map)
 
         this.mapMan = createMapMan(map, drawFeatureGroup)
+
+        map.on('click', e => {
+          this.selectedEntry = null
+          this.selectedFeature = null
+        })
       })
     },
 
@@ -237,6 +242,7 @@
           })
 
           layer.on('click', e => {
+            L.DomEvent.stop(e)
             this.selectedFeature = e.target.feature
             this.entrySelection(entry)
           })
@@ -345,14 +351,22 @@
         const prevEntry = this.mapMan.endEditing()
         console.log("_applyEdits: prevEntry=", prevEntry)
         if (prevEntry) {
-          const {entryEdited, geometry} = prevEntry
+          let {entryEdited, geometry} = prevEntry
 
           console.log('updating geometry to', cloneDeep(geometry))
+
+          if (geometry.type === 'FeatureCollection') {
+            if (geometry.features.length === 1) {
+              geometry = geometry.features[0]
+            }
+          }
 
           // reflect updated geometryL
           entryEdited.geometry = geometry
           this.entries.push(entryEdited)
           this.selectedEntry = entryEdited
+
+          this.selectedFeature = geometry
         }
         this._setEntriesInteractive(true)
       },
@@ -441,7 +455,7 @@
       },
 
       _updatedFeature(feature) {
-        console.log('_updatedFeature', feature, 'selectedEntry=', this.selectedEntry)
+        // console.log('_updatedFeature', feature, 'selectedEntry=', this.selectedEntry)
         this.selectedFeature = feature
         this.selectedEntry.geometry = feature
       },
