@@ -1,71 +1,62 @@
 <template>
-  <table style="height:100%; width:100%">
-    <tbody>
-    <tr style="height:100%; width:100%">
-      <td
-        v-if="includeTable && selectedEntry && selectedFeature"
-        :style="`width:${tableWidth}`"
+  <div style="height:100%; width:100%">
+    <div class="gjMap fit">
+      <l-map
+        ref="gjMap"
+        :zoom="zoom"
+        :center="center"
+        :options="{zoomControl:false, attributionControl: false}"
       >
-        <coords-table
-          :entry="selectedEntry"
-          :feature="selectedFeature"
-          :editable="editable && !isEditing()"
-          v-on:mousePos="_mousePosFromCoordsTable"
-          v-on:centerMapAt="_centerMapAt"
-          v-on:updatedFeature="_updatedFeature"
-        />
-      </td>
-      <td>
-        <div
-          class="gjMap fit"
-          :style="`width:${mapWidth};height:${mapHeight}`"
+        <map-buttons
+          :editable="editable"
+          :selection-for-editing="!!selectedEntry"
+          :is-editing="isEditing()"
+          v-on:doZoom="_doZoom"
+          v-on:zoomToAll="zoomToAll"
+          v-on:zoomToAllSelected="zoomToAllSelected"
+          v-on:startEditing="startEditing"
+          v-on:startAdding="startAdding"
+          v-on:applyEdits="_applyEdits"
+          v-on:cancelEdits="_cancelEdits"
         >
-          <l-map
-            ref="gjMap"
-            :zoom="zoom"
-            :center="center"
-            :options="{zoomControl:false, attributionControl: false}"
+          <q-dialog
+            seamless
+            position="left"
+            :value="includeTable && selectedEntry && !!selectedFeature"
           >
-            <map-buttons
-              :editable="editable"
-              :selection-for-editing="!!selectedEntry"
-              :is-editing="isEditing()"
-              v-on:doZoom="_doZoom"
-              v-on:zoomToAll="zoomToAll"
-              v-on:zoomToAllSelected="zoomToAllSelected"
-              v-on:startEditing="startEditing"
-              v-on:startAdding="startAdding"
-              v-on:applyEdits="_applyEdits"
-              v-on:cancelEdits="_cancelEdits"
+            <coords-table
+              :entry="selectedEntry"
+              :feature="selectedFeature"
+              :editable="editable && !isEditing()"
+              v-on:mousePos="_mousePosFromCoordsTable"
+              v-on:centerMapAt="_centerMapAt"
+              v-on:updatedFeature="_updatedFeature"
             />
+          </q-dialog>
+        </map-buttons>
 
-            <l-feature-group ref="staticFeatureGroup">
-              <l-geo-json
-                v-for="(entry, index) in entries"
-                :key="`entry_${index}`"
-                :ref="`entry_${index}`"
-                :geojson="entry.geometry"
-                :options="entry.options"
-              >
-              </l-geo-json>
-            </l-feature-group>
+        <l-feature-group ref="staticFeatureGroup">
+          <l-geo-json
+            v-for="(entry, index) in entries"
+            :key="`entry_${index}`"
+            :ref="`entry_${index}`"
+            :geojson="entry.geometry"
+            :options="entry.options"
+          >
+          </l-geo-json>
+        </l-feature-group>
 
-            <l-feature-group ref="drawFeatureGroup">
-            </l-feature-group>
+        <l-feature-group ref="drawFeatureGroup">
+        </l-feature-group>
 
-            <slot name="map-body">
-              <mouse-pos-marker
-                :mouse-pos="mousePosFromCoordsTable || mousePos"
-              />
-            </slot>
-
-          </l-map>
-
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+        <slot name="map-body">
+          <mouse-pos-marker
+            :mouse-pos="mousePosFromCoordsTable || mousePos"
+          />
+        </slot>
+      </l-map>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -124,25 +115,6 @@
       mousePos: {
         type: Object,
         default: null,
-      },
-    },
-
-    computed: {
-      tableWidth() {
-        return `70px`
-      },
-
-      mapWidth() {
-        if (this.includeTable && this.selectedEntry && this.selectedFeature) {
-          return `calc(100% - ${this.tableWidth})`
-        }
-        else {
-          return `100%`
-        }
-      },
-
-      mapHeight() {
-        return `100%`
       },
     },
 

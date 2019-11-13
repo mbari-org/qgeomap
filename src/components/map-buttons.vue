@@ -104,6 +104,7 @@
         </q-tooltip>
       </q-btn>
     </div>
+    <slot></slot>
   </div>
 </template>
 

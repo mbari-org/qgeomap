@@ -1,6 +1,6 @@
 <template>
-  <q-page class="bg-blue-1">
-    <q-toolbar class="bg-primary text-white">
+  <div class="bg-blue-1 q-pb-xs">
+    <q-toolbar class="bg-primary text-white q-mb-sm">
       <q-toolbar-title style="font-size:1.1em">
         {{ entry.entry_id }}
       </q-toolbar-title>
@@ -9,12 +9,11 @@
 
     <form class="q-ma-xs">
 
-      <div class="row q-gutter-md">
-
+      <div class="column q-gutter-md">
         <div>
           <div v-if="radius !== null" class="text-bold">Center:</div>
           <q-table
-            :dense="$q.screen.lt.md"
+            dense
             :data="tableData"
             :columns="columns"
             row-key="index"
@@ -106,7 +105,7 @@
         >feature={{feature}}</pre>
       </div>
     </form>
-  </q-page>
+  </div>
 </template>
 
 <script>
