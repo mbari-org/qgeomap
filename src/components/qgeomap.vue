@@ -57,8 +57,10 @@
           class="q-ma-xs"
           :entry="selectedEntry"
           :feature="selectedFeature"
-          v-on:mousePos="onMousePosFromCoordsTable"
+          :editable="editable && !isEditing()"
+          v-on:mousePos="_mousePosFromCoordsTable"
           v-on:centerMapAt="_centerMapAt"
+          v-on:updatedFeature="_updatedFeature"
         />
       </td>
     </tr>
@@ -154,6 +156,7 @@
       entries: [],
 
       mousePosFromCoordsTable: null,
+      coordsTableEditable: false,
     }),
 
     mounted() {
@@ -275,8 +278,8 @@
         else this.$emit('warning', `No entry by id: '${entry_id}'`)
       },
 
-      onMousePosFromCoordsTable(p) {
-        // console.log("onMousePosFromCoordsTable: p=", p)
+      _mousePosFromCoordsTable(p) {
+        // console.log("_mousePosFromCoordsTable: p=", p)
         this.mousePosFromCoordsTable = p ? {latLon: p, radius: 5} : null
       },
 
@@ -435,6 +438,12 @@
       _centerMapAt(latLon) {
         console.log('_centerMapAt', latLon)
         this.center = latLon
+      },
+
+      _updatedFeature(feature) {
+        console.log('_updatedFeature', feature, 'selectedEntry=', this.selectedEntry)
+        this.selectedFeature = feature
+        this.selectedEntry.geometry = feature
       },
     },
   }

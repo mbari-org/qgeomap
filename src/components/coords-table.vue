@@ -37,6 +37,7 @@
                     style="white-space:nowrap;width:5px"
               >{{ props.row.latitude && props.row.latitude.toFixed(4) || '' }}
                 <q-popup-edit
+                  v-if="editable"
                   v-model="props.row.latitude"
                   buttons
                 >
@@ -95,6 +96,11 @@
         type: Object,
         required: true,
       },
+
+      editable: {
+        type: Boolean,
+        default: false
+      },
     },
 
     data () {
@@ -151,13 +157,14 @@
       },
 
       getTableData() {
-        console.log('getTableData: feature=', cloneDeep(this.feature))
+        // console.log('getTableData: feature=', cloneDeep(this.feature))
 
         let list = []
         if (this.feature && this.feature.geometry) {
-          console.log(`getTableData: type=${this.feature.geometry.type}`,
-            'coordinates=', this.feature.geometry.coordinates
-          )
+          // console.log(`getTableData: type=${this.feature.geometry.type}`,
+          //   'coordinates=', this.feature.geometry.coordinates
+          // )
+
           switch (this.feature.geometry.type) {
             case 'Polygon': {
               list = this.feature.geometry.coordinates[0]
@@ -181,17 +188,12 @@
       },
 
       updateFeature(tableData) {
-        // TODO
-        return
-
-        console.log('updateFeature')
+        // console.log('updateFeature')
         const lonlats = map(tableData, ({latitude, longitude}) =>
           [longitude, latitude]
         )
 
-        const token_id = tid(this.entry.token)
-
-        let updatedFeature = cloneDeep(this.feature)
+        const updatedFeature = cloneDeep(this.feature)
 
         switch (this.feature.geometry.type) {
           case 'Polygon': {
@@ -210,8 +212,9 @@
           }
         }
 
-        this.feature = updatedFeature
-        this.$store.commit('model/setTokenGeometry', {token_id, geometry: this.feature.geometry})
+        if (!isEqual(updatedFeature, this.feature)) {
+          this.$emit('updatedFeature', updatedFeature)
+        }
       },
 
       centerMapAt(row) {
@@ -233,6 +236,13 @@
     watch: {
       feature() {
         this.reflectInputs()
+      },
+
+      tableData: {
+        handler(tableData) {
+          this.updateFeature(tableData)
+        },
+        deep: true,
       },
     },
   }

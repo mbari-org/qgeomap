@@ -37,6 +37,38 @@ function createMapMan(map, drawFeatureGroup) {
     drawFeatureGroup.addLayer(e.layer)
   })
 
+  map.on(L.Draw.Event.DRAWSTART, e => {
+    console.warn('L.Draw.Event.DRAWSTART', e)
+  })
+
+  map.on(L.Draw.Event.DRAWSTOP, e => {
+    console.warn('L.Draw.Event.DRAWSTOP', e)
+  })
+
+  map.on(L.Draw.Event.DRAWVERTEX, e => {
+    console.warn('L.Draw.Event.DRAWVERTEX', e)
+  })
+
+  map.on(L.Draw.Event.EDITSTART, e => {
+    console.warn('L.Draw.Event.EDITSTART', e)
+  })
+
+  map.on(L.Draw.Event.EDITMOVE, e => {
+    console.warn('L.Draw.Event.EDITMOVE', e)
+  })
+
+  map.on(L.Draw.Event.EDITRESIZE, e => {
+    console.warn('L.Draw.Event.EDITRESIZE', e)
+  })
+
+  map.on(L.Draw.Event.EDITVERTEX, e => {
+    console.warn('L.Draw.Event.EDITVERTEX', e)
+  })
+
+  map.on(L.Draw.Event.EDITSTOP, e => {
+    console.warn('L.Draw.Event.EDITSTOP', e)
+  })
+
   return {
     isEditing,
     startEditing,
