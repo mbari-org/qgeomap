@@ -2,6 +2,8 @@
 
 Status: preliminary
 
+> ![](ss.png)
+
 # Install
 ```bash
 quasar ext add @mbari/qgeomap
