@@ -21,13 +21,14 @@
         >
           <q-dialog
             seamless
-            position="left"
+            :position="tablePosition"
             :value="includeTable && selectedEntry && !!selectedFeature"
           >
             <coords-table
               :entry="selectedEntry"
               :feature="selectedFeature"
               :editable="editable && !isEditing()"
+              :debug-feature="debugFeature"
               v-on:mousePos="_mousePosFromCoordsTable"
               v-on:centerMapAt="_centerMapAt"
               v-on:updatedFeature="_updatedFeature"
@@ -102,6 +103,11 @@
     },
 
     props: {
+      initialBaseLayerName: {
+        type: String,
+        required: false
+      },
+
       editable: {
         type: Boolean,
         default: false
@@ -112,9 +118,19 @@
         default: false
       },
 
+      tablePosition: {
+        type: String,
+        default: undefined
+      },
+
       mousePos: {
         type: Object,
         default: null,
+      },
+
+      debugFeature: {
+        type: Boolean,
+        default: false
       },
     },
 
@@ -139,7 +155,7 @@
 
         if (debug) console.debug(`qgeomap mounted:`, 'map=', map)
 
-        this.mapMan = createMapMan(map, drawFeatureGroup)
+        this.mapMan = createMapMan(map, drawFeatureGroup, this.initialBaseLayerName)
 
         map.on('click', e => {
           this.selectedEntry = null

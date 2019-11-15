@@ -60,6 +60,7 @@
                       style="white-space:nowrap;width:5px"
                 >{{ props.row.longitude && props.row.longitude.toFixed(4) || ''}}
                   <q-popup-edit
+                    v-if="editable"
                     v-model="props.row.longitude"
                     buttons
                   >
@@ -100,7 +101,7 @@
         </div>
 
         <pre
-          v-if="debug"
+          v-if="debugFeature"
           style="font-size: smaller" class="bg-grey-1"
         >feature={{feature}}</pre>
       </div>
@@ -132,6 +133,11 @@
       },
 
       editable: {
+        type: Boolean,
+        default: false
+      },
+
+      debugFeature: {
         type: Boolean,
         default: false
       },

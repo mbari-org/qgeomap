@@ -22,12 +22,13 @@ catch(error) {
   console.warn(error)
 }
 
-function createMapMan(map, drawFeatureGroup) {
-  if (debug) console.debug('createMapMan: drawFeatureGroup=', drawFeatureGroup)
+function createMapMan(map, drawFeatureGroup, initialBaseLayerName) {
+  if (debug) console.debug('createMapMan: drawFeatureGroup=', drawFeatureGroup,
+    'initialBaseLayerName=', initialBaseLayerName)
 
   L.DomUtil.addClass(map._container, 'my-default-cursor')
   mousePosition.addToMap(map)
-  initBaseLayers(map)
+  initBaseLayers(map, initialBaseLayerName)
 
   let entryEdited = null
   let drawControl = null
@@ -286,7 +287,7 @@ function createDrawControl(featureGroup, entry) {
   return new L.Control.Draw(options)
 }
 
-function initBaseLayers(map) {
+function initBaseLayers(map, initialBaseLayerName) {
   const esriOceansLayer = esri.basemapLayer('Oceans')
   const esriOceansLabelsLayer = esri.basemapLayer('OceansLabels')
   const esriOceansWithLabelsLayer = L.featureGroup([esriOceansLayer, esriOceansLabelsLayer])
@@ -306,7 +307,7 @@ function initBaseLayers(map) {
   }
   const controlLayers = L.control.layers(baseLayers).addTo(map)
 
-  let baseLayerName = 'Google satellite'   // 'ESRI Oceans/Labels'  /*(B2)*/
+  let baseLayerName = initialBaseLayerName || 'Google satellite'   // 'ESRI Oceans/Labels'  /*(B2)*/
   baseLayers[baseLayerName].addTo(map)
 }
 
