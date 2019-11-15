@@ -170,10 +170,10 @@
 
         const prevEntry = find(this.entries, {entry_id: entry.entry_id})
         if (prevEntry) {
-          this.$emit('warning', `Duplicate entry by id: '${entry.entry_id}'`)
-          return
+          return this._warning(`Duplicate entry by id: '${entry.entry_id}'`)
         }
 
+        // TODO should entry.geometry be required?
         if (!entry.geometry) {
           entry.geometry = {
             type: "FeatureCollection",
@@ -233,7 +233,8 @@
           layer.on('click', e => {
             L.DomEvent.stop(e)
             this.selectedFeature = e.target.feature
-            this.entrySelection(entry)
+            console.log("click: selectedFeature=", this.selectedFeature)
+            this._entrySelection(entry)
           })
 
           layer.on('dblclick', e => {
@@ -256,10 +257,22 @@
         }
       },
 
+      selectEntry(entry_id) {
+        // TODO check any ongoing editing
+
+        const entry = find(this.entries, {entry_id})
+        console.log("selectEntry: entry_id=", entry_id, 'entry=', entry)
+        if (entry) {
+          this.selectedFeature = entry.geometry
+          console.log("selectEntry: selectedFeature=", this.selectedFeature)
+          this._entrySelection(entry)
+        }
+        else return this._warning(`No entry to select by id: '${entry_id}'`)
+      },
+
       editEntry(entry_id) {
         if (!this.editable) {
-          this.$emit('warning', 'not editable')
-          return
+          return this._warning('not editable')
         }
 
         console.log("editEntry: entry_id=", entry_id)
@@ -267,16 +280,15 @@
 
         const entry = find(this.entries, {entry_id})
         if (entry) {
-          this.entrySelection(entry)
+          this._entrySelection(entry)
           this.startEditing()
         }
-        else this.$emit('warning', `No entry by id: '${entry_id}'`)
+        else return this._warning(`No entry to edit by id: '${entry_id}'`)
       },
 
       editNew(geomType, entry_id) {
         if (!this.editable) {
-          this.$emit('warning', 'not editable')
-          return
+          return this._warning('not editable to add new geometry')
         }
 
         console.log("editNew: geomType=", geomType, 'entry_id=', entry_id)
@@ -299,8 +311,8 @@
         this.mousePosFromCoordsTable = p ? {latLon: p, radius: 5} : null
       },
 
-      entrySelection(entry) {
-        console.log("entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
+      _entrySelection(entry) {
+        console.log("_entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
 
         if (this.isEditing()) {
           // TODO proper handling if editing
@@ -336,14 +348,14 @@
           this._setEntriesInteractive(false)
           this.mapMan.startEditing(this.selectedEntry)
         }
-        else this.$emit('warning', 'Select the geometry you want to edit')
+        else return this._warning('Select the geometry you want to edit')
       },
 
       startAdding() {
         if (!this.selectedEntry) {
           this.$emit('startAdding')
         }
-        else this.$emit('warning', 'Unselect any geometry to add new one')
+        else return this._warning('Unselect any geometry to add a new one')
       },
 
       _setEntriesInteractive(interactive) {
@@ -417,7 +429,7 @@
         if (bounds && bounds.isValid()) {
           this.mapObject.fitBounds(bounds, {maxZoom: 11})
         }
-        else this.$emit('warning', 'No bounds to zoom to')
+        else return this._warning('No bounds to zoom to')
       },
 
       zoomToEdited() {
@@ -456,7 +468,7 @@
         }
 
         if (message) {
-          this.$emit('warning', message)
+          return this._warning(message)
         }
       },
 
@@ -474,6 +486,11 @@
         // console.log('_updatedFeature', feature, 'selectedEntry=', this.selectedEntry)
         this.selectedFeature = feature
         this.selectedEntry.geometry = feature
+      },
+
+      _warning(message) {
+        this.$emit('warning', message)
+        return message
       },
     },
   }

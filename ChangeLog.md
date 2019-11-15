@@ -1,5 +1,6 @@
 2019-11
 
+- add selectEntry
 - allow to indicate initial base layer name
 - for now, use L.Circle instead of L.Marker due to issue
 - use a seamless dialog for the coords-table

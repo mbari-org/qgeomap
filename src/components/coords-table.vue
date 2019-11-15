@@ -1,10 +1,12 @@
 <template>
   <div class="bg-blue-1 q-pb-xs">
     <q-toolbar class="bg-primary text-white q-mb-sm">
-      <q-toolbar-title style="font-size:1.1em">
+      <q-toolbar-title style="font-size:1em">
         {{ entry.entry_id }}
+        <q-tooltip>
+          {{ displayType }}
+        </q-tooltip>
       </q-toolbar-title>
-      <div class="text-grey-2" style="font-size:0.8em">{{ displayType }}</div>
     </q-toolbar>
 
     <form class="q-ma-xs">
@@ -26,11 +28,11 @@
                     @mouseover.native="mousePos(props.row)" @mouseout.native="mousePos()"
               >
                 <q-td key="centerCol" :props="props"
-                      style="width:1px"
+                      style="width:1px; padding:0"
                 >
                   <q-btn
-                    round dense
-                    size="xs" class="q-mr-xs"
+                    round dense flat
+                    size="sm"
                     @click="centerMapAt(props.row)"
                   >
                     <q-icon name="album" size="12px" />
@@ -57,7 +59,7 @@
                 </q-td>
 
                 <q-td key="longitude" :props="props"
-                      style="white-space:nowrap;width:5px"
+                      style="white-space:nowrap;width:5px;padding-right:4px"
                 >{{ props.row.longitude && props.row.longitude.toFixed(4) || ''}}
                   <q-popup-edit
                     v-if="editable"
