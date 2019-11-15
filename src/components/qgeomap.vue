@@ -184,7 +184,10 @@
             return new L.Circle(latlng, feature.properties.radius)
           }
           else {
-            return new L.Marker(latlng)
+            // TODO having "invalid img url" issue with marker...
+            // return new L.Marker(latlng)
+            // ... let's use a small circle for the moment:
+            return new L.Circle(latlng, 200)
           }
         }
 
@@ -395,7 +398,10 @@
         const drawFeatureGroup = this.$refs.drawFeatureGroup.mapObject
         const allGroup = L.featureGroup([staticFeatureGroup, drawFeatureGroup])
         const bounds = allGroup.getBounds()
-        this.mapObject.fitBounds(bounds, {maxZoom: 11})
+        if (bounds && bounds.isValid()) {
+          this.mapObject.fitBounds(bounds, {maxZoom: 11})
+        }
+        else this.$emit('warning', 'No bounds to zoom to')
       },
 
       zoomToEdited() {

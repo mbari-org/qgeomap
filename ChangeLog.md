@@ -1,5 +1,6 @@
 2019-11
 
+- for now, use L.Circle instead of L.Marker due to issue
 - use a seamless dialog for the coords-table
 - allow to add geometry
 - preparing to handle: editing existing geometry and adding a new geometry
