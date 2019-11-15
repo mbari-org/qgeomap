@@ -1,5 +1,6 @@
 2019-11
 
+- add closable to coords-table
 - add selectEntry
 - allow to indicate initial base layer name
 - for now, use L.Circle instead of L.Marker due to issue

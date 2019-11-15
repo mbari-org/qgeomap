@@ -7,6 +7,14 @@
           {{ displayType }}
         </q-tooltip>
       </q-toolbar-title>
+      <q-btn
+        v-if="closable"
+        round dense flat
+        size="sm"
+        @click="$emit('closing')"
+      >
+        <q-icon name="cancel" size="14px" />
+      </q-btn>
     </q-toolbar>
 
     <form class="q-ma-xs">
@@ -135,6 +143,11 @@
       },
 
       editable: {
+        type: Boolean,
+        default: false
+      },
+
+      closable: {
         type: Boolean,
         default: false
       },

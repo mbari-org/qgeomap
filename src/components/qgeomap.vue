@@ -14,15 +14,15 @@
           v-on:doZoom="_doZoom"
           v-on:zoomToAll="zoomToAll"
           v-on:zoomToAllSelected="zoomToAllSelected"
-          v-on:startEditing="startEditing"
-          v-on:startAdding="startAdding"
+          v-on:startEditing="_startEditing"
+          v-on:startAdding="_startAdding"
           v-on:applyEdits="_applyEdits"
           v-on:cancelEdits="_cancelEdits"
         >
           <q-dialog
             seamless
             :position="tablePosition"
-            :value="includeTable && selectedEntry && !!selectedFeature"
+            :value="includeTable && selectedEntry && !!selectedFeature && showCoordsTableDialog"
           >
             <coords-table
               :entry="selectedEntry"
@@ -32,6 +32,7 @@
               v-on:mousePos="_mousePosFromCoordsTable"
               v-on:centerMapAt="_centerMapAt"
               v-on:updatedFeature="_updatedFeature"
+              closable v-on:closing="showCoordsTableDialog = false"
             />
           </q-dialog>
         </map-buttons>
@@ -145,6 +146,7 @@
 
       mousePosFromCoordsTable: null,
       coordsTableEditable: false,
+      showCoordsTableDialog: true, // one of the conditions.
     }),
 
     mounted() {
@@ -281,7 +283,7 @@
         const entry = find(this.entries, {entry_id})
         if (entry) {
           this._entrySelection(entry)
-          this.startEditing()
+          this._startEditing()
         }
         else return this._warning(`No entry to edit by id: '${entry_id}'`)
       },
@@ -314,6 +316,8 @@
       _entrySelection(entry) {
         console.log("_entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
 
+        this.showCoordsTableDialog = true
+
         if (this.isEditing()) {
           // TODO proper handling if editing
           // For now, ignoring.
@@ -327,10 +331,10 @@
         else {
           this.selectedEntry = null
         }
-        this.bringSelectedEntryToFront()
+        this._bringSelectedEntryToFront()
       },
 
-      bringSelectedEntryToFront() {
+      _bringSelectedEntryToFront() {
         if (this.selectedEntry) {
           this._findAndExtractEntry(this.selectedEntry.entry_id)
           this.entries.push(this.selectedEntry)
@@ -341,19 +345,19 @@
         return this.mapMan && this.mapMan.isEditing()
       },
 
-      startEditing() {
+      _startEditing() {
         if (this.selectedEntry) {
           this._findAndExtractEntry(this.selectedEntry.entry_id)
-          console.log('startEditing:', 'selectedEntry=', this.selectedEntry)
+          console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
           this._setEntriesInteractive(false)
           this.mapMan.startEditing(this.selectedEntry)
         }
         else return this._warning('Select the geometry you want to edit')
       },
 
-      startAdding() {
+      _startAdding() {
         if (!this.selectedEntry) {
-          this.$emit('startAdding')
+          this.$emit('_startAdding')
         }
         else return this._warning('Unselect any geometry to add a new one')
       },
