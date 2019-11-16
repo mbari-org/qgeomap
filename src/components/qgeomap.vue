@@ -396,6 +396,8 @@
           this.selectedEntry = entryEdited
 
           this.selectedFeature = geometry
+
+          this.$emit('editsApplied', entryEdited)
         }
         this._setEntriesInteractive(true)
       },

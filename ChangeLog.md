@@ -1,5 +1,6 @@
 2019-11
 
+- emit editsApplied
 - add closable to coords-table
 - add selectEntry
 - allow to indicate initial base layer name
