@@ -1,9 +1,24 @@
 {
   "type": "component",
   "props": {
+    "googleApiKey": {
+      "type": "String",
+      "desc": "Google API Key for inclusion of some base layers.",
+      "required": false
+    },
+    "initialBaseLayerName": {
+      "type": "String",
+      "desc": "Name of the layer to be displayed initially.",
+      "required": false
+    },
     "editable": {
       "type": "Boolean",
       "desc": "Allow editing of geometries? Default: false.",
+      "default": false
+    },
+    "includeTable": {
+      "type": "Boolean",
+      "desc": "Include coordinate table? Default: false.",
       "default": false
     },
     "mousePos": {

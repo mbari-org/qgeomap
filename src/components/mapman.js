@@ -22,7 +22,15 @@ catch(error) {
   console.warn(error)
 }
 
-function createMapMan(map, drawFeatureGroup, initialBaseLayerName) {
+let setupGoogleApiCalled = false
+let googleOk = false
+
+function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey) {
+  if (!setupGoogleApiCalled) {
+    setupGoogleApiCalled = true
+    setupGoogleApi(googleApiKey)
+  }
+
   if (debug) console.debug('createMapMan: drawFeatureGroup=', drawFeatureGroup,
     'initialBaseLayerName=', initialBaseLayerName)
 
@@ -292,22 +300,25 @@ function initBaseLayers(map, initialBaseLayerName) {
   const esriOceansLabelsLayer = esri.basemapLayer('OceansLabels')
   const esriOceansWithLabelsLayer = L.featureGroup([esriOceansLayer, esriOceansLabelsLayer])
   const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-  const gHybridLayer = L.gridLayer.googleMutant({type: 'hybrid'})
-  const gSatelliteLayer = L.gridLayer.googleMutant({type: 'satellite'})
+
+  let defaultInitialBaseLayerName = 'ESRI Oceans/Labels'
 
   // TODO leaflet or esri bug? radio button 'ESRI Oceans' seems to be always pre-selected
   // if 'ESRI Oceans' is added (B1), and 'ESRI Oceans/Labels' is  added to the map (B2).
   // Also, a 2nd click on 'ESRI Oceans/Labels' brings the one with only the labels!
   const baseLayers = {
-    'ESRI Oceans/Labels': esriOceansWithLabelsLayer,
+    [defaultInitialBaseLayerName]: esriOceansWithLabelsLayer,
     // 'ESRI Oceans': esriOceansLayer, /*(B1)*/
     'OpenStreetMap': osmLayer,
-    'Google hybrid': gHybridLayer,
-    'Google satellite': gSatelliteLayer,
+  }
+  if (googleOk) {
+    baseLayers['Google hybrid'] = L.gridLayer.googleMutant({type: 'hybrid'})
+    baseLayers['Google satellite'] = L.gridLayer.googleMutant({type: 'satellite'})
+    defaultInitialBaseLayerName = 'Google satellite'
   }
   const controlLayers = L.control.layers(baseLayers).addTo(map)
 
-  let baseLayerName = initialBaseLayerName || 'Google satellite'   // 'ESRI Oceans/Labels'  /*(B2)*/
+  const baseLayerName = baseLayers[initialBaseLayerName] ? initialBaseLayerName : defaultInitialBaseLayerName   // 'ESRI Oceans/Labels'  /*(B2)*/
   baseLayers[baseLayerName].addTo(map)
 }
 
@@ -350,5 +361,18 @@ function geometryToLayer(entry, geometry = entry.geometry) {
 
     default:
       return L.GeoJSON.geometryToLayer(geometry, entry.options)
+  }
+}
+
+function setupGoogleApi(googleApiKey) {
+  if (typeof window.google === 'object' && typeof window.google.maps === 'object') {
+    googleOk = true
+  }
+  else if (googleApiKey) {
+    const url = `https://maps.googleapis.com/maps/api/js?key=${googleApiKey}`
+    const script = document.createElement('script')
+    script.setAttribute('src', url)
+    document.head.appendChild(script)
+    googleOk = true
   }
 }

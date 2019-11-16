@@ -109,6 +109,11 @@
         required: false
       },
 
+      googleApiKey: {
+        type: String,
+        required: false
+      },
+
       editable: {
         type: Boolean,
         default: false
@@ -157,7 +162,8 @@
 
         if (debug) console.debug(`qgeomap mounted:`, 'map=', map)
 
-        this.mapMan = createMapMan(map, drawFeatureGroup, this.initialBaseLayerName)
+        this.mapMan = createMapMan(map, drawFeatureGroup,
+            this.initialBaseLayerName, this.googleApiKey)
 
         map.on('click', e => {
           this.selectedEntry = null

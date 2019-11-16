@@ -1,5 +1,7 @@
 2019-11
 
+- conditional inclusion of google map layers: 
+  dependent on google already available or via script with given apikey
 - emit editsApplied
 - add closable to coords-table
 - add selectEntry
