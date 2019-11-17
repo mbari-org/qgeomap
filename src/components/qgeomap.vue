@@ -265,6 +265,10 @@
         }
       },
 
+      getEntries() {
+        return this.entries
+      },
+
       selectEntry(entry_id) {
         // TODO check any ongoing editing
 
@@ -363,7 +367,7 @@
 
       _startAdding() {
         if (!this.selectedEntry) {
-          this.$emit('_startAdding')
+          this.$emit('startAdding')
         }
         else return this._warning('Unselect any geometry to add a new one')
       },
@@ -498,6 +502,7 @@
         // console.log('_updatedFeature', feature, 'selectedEntry=', this.selectedEntry)
         this.selectedFeature = feature
         this.selectedEntry.geometry = feature
+        this.$emit('editsApplied', this.selectedEntry)
       },
 
       _warning(message) {

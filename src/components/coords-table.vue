@@ -50,36 +50,46 @@
                   </q-btn>
                 </q-td>
 
-                <q-td key="latitude" :props="props"
-                      style="white-space:nowrap;width:5px"
-                >{{ props.row.latitude && props.row.latitude.toFixed(4) || '' }}
-                  <q-popup-edit
-                    v-if="editable"
-                    v-model="props.row.latitude"
-                    buttons
-                  >
-                    <q-input
-                      type="number"
-                      v-model.number="props.row.latitude"
-                      dense autofocus filled
-                    />
-                  </q-popup-edit>
+                <q-td
+                  key="latitude" :props="props"
+                  style="white-space:nowrap;width:5px"
+                >
+                  <div :class="{'bg-green-1': editable}">
+                    {{ props.row.latitude && props.row.latitude.toFixed(4) || '' }}
+                    <q-popup-edit
+                      v-if="editable"
+                      title="latitude"
+                      v-model="props.row.latitude"
+                      buttons
+                    >
+                      <q-input
+                        type="number"
+                        v-model.number="props.row.latitude"
+                        dense autofocus filled
+                      />
+                    </q-popup-edit>
+                  </div>
                 </q-td>
 
-                <q-td key="longitude" :props="props"
-                      style="white-space:nowrap;width:5px;padding-right:4px"
-                >{{ props.row.longitude && props.row.longitude.toFixed(4) || ''}}
-                  <q-popup-edit
-                    v-if="editable"
-                    v-model="props.row.longitude"
-                    buttons
-                  >
-                    <q-input
-                      type="number"
-                      v-model.number="props.row.longitude"
-                      dense autofocus filled
-                    />
-                  </q-popup-edit>
+                <q-td
+                  key="longitude" :props="props"
+                  style="white-space:nowrap;width:5px;padding-right:4px"
+                >
+                  <div :class="{'bg-green-1': editable}">
+                    {{ props.row.longitude && props.row.longitude.toFixed(4) || ''}}
+                    <q-popup-edit
+                      v-if="editable"
+                      title="longitude"
+                      v-model="props.row.longitude"
+                      buttons
+                    >
+                      <q-input
+                        type="number"
+                        v-model.number="props.row.longitude"
+                        dense autofocus filled
+                      />
+                    </q-popup-edit>
+                  </div>
                 </q-td>
               </q-tr>
             </template>
@@ -161,7 +171,8 @@
     computed: {
       displayType() {
         const hasRadius = get(this.feature, 'properties.radius')
-        return hasRadius ? 'Circle' : this.feature.geometry.type
+        return hasRadius ? 'Circle'
+            : get(this.feature, 'geometry.type') || this.feature.type || '??'
       },
     },
 
@@ -250,23 +261,25 @@
 
         const updatedFeature = cloneDeep(this.feature)
 
-        switch (this.feature.geometry.type) {
-          case 'Polygon': {
-            updatedFeature.geometry.coordinates[0] = lonlats
-            break
-          }
-
-          case 'LineString': {
-            updatedFeature.geometry.coordinates = lonlats
-            break
-          }
-
-          case 'Point': {
-            updatedFeature.geometry.coordinates = lonlats[0]
-            if (this.radius !== null && this.radius > 0) {
-              set(updatedFeature, 'properties.radius', +this.radius.toFixed(2))
+        if (this.feature.geometry) {
+          switch (this.feature.geometry.type) {
+            case 'Polygon': {
+              updatedFeature.geometry.coordinates[0] = lonlats
+              break
             }
-            break
+
+            case 'LineString': {
+              updatedFeature.geometry.coordinates = lonlats
+              break
+            }
+
+            case 'Point': {
+              updatedFeature.geometry.coordinates = lonlats[0]
+              if (this.radius !== null && this.radius > 0) {
+                set(updatedFeature, 'properties.radius', +this.radius.toFixed(2))
+              }
+              break
+            }
           }
         }
 

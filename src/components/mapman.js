@@ -43,8 +43,14 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
 
   map.on(L.Draw.Event.CREATED, e => {
     console.warn('L.Draw.Event.CREATED', e)
-    // just add the layer as created.
     drawFeatureGroup.addLayer(e.layer)
+  })
+
+  map.on(L.Draw.Event.DELETED, e => {
+    e.layers.eachLayer(layer => {
+      console.warn('L.Draw.Event.DELETED layer=', layer)
+      drawFeatureGroup.removeLayer(layer)
+    })
   })
 
   map.on(L.Draw.Event.DRAWSTART, e => {
