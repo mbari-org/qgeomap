@@ -1,5 +1,8 @@
 2019-11
 
+- for convenience at the moment, simplify editing logic: 
+  include most edit/draw options in general and delegate on client 
+  for any further restrictions
 - conditional inclusion of google map layers: 
   dependent on google already available or via script with given apikey
 - emit editsApplied

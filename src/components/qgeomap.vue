@@ -15,7 +15,6 @@
           v-on:zoomToAll="zoomToAll"
           v-on:zoomToAllSelected="zoomToAllSelected"
           v-on:startEditing="_startEditing"
-          v-on:startAdding="_startAdding"
           v-on:applyEdits="_applyEdits"
           v-on:cancelEdits="_cancelEdits"
         >
@@ -356,20 +355,17 @@
       },
 
       _startEditing() {
+        console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
+
         if (this.selectedEntry) {
           this._findAndExtractEntry(this.selectedEntry.entry_id)
           console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
           this._setEntriesInteractive(false)
           this.mapMan.startEditing(this.selectedEntry)
         }
-        else return this._warning('Select the geometry you want to edit')
-      },
 
-      _startAdding() {
-        if (!this.selectedEntry) {
-          this.$emit('startAdding')
-        }
-        else return this._warning('Unselect any geometry to add a new one')
+        // notify client, in particular in case of not having a selectedEntry
+        this.$emit('startEditing', this.selectedEntry)
       },
 
       _setEntriesInteractive(interactive) {

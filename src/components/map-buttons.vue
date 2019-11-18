@@ -7,21 +7,16 @@
       <div>
         <q-btn
           v-if="editable"
-          :icon="selectionForEditing ? 'edit' : 'library_add'"
+          icon="edit"
           dense glossy size="sm"
           color="yellow-7"
           class="shadow-8 q-mr-lg text-black"
           :disable="isEditing"
-          @click.stop.prevent="$emit(selectionForEditing ? 'startEditing' : 'startAdding')"
+          @click.stop.prevent="$emit('startEditing')"
         />
         <!--separate tooltip to avoid issue of having it open forever sometimes -->
         <q-tooltip anchor="center left" self="center right">
-          <span v-if="selectionForEditing">
-            Edit selected geometries
-          </span>
-          <span v-else>
-            Add a geometry
-          </span>
+          Edit or add geometries
         </q-tooltip>
       </div>
 

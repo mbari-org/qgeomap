@@ -93,7 +93,7 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
   }
 
   function isEditing() {
-    return !!entryEdited
+    return !!drawControl
   }
 
   function startEditing(entry) {
@@ -104,9 +104,10 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
     if (entry) {
       entryEdited = entry
       addLayersToDraw(entryEdited)
-      drawControl = createDrawControl(drawFeatureGroup, entry)
-      map.addControl(drawControl)
     }
+
+    drawControl = createDrawControl(drawFeatureGroup, entry)
+    map.addControl(drawControl)
 
     return prevEntry
   }
@@ -183,113 +184,75 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
   }
 }
 
-function getEditModeForEntry(entry) {
-  if (entry.is_new) {
-    return {
-      draw: entry.is_new.geomType
-    }
-  }
-  else if (entry.geometry) {
-    return {
-      edit: getEditMode(entry.geometry)
-    }
-  }
-
-  function getEditMode(geometry) {
-    switch(geometry.type) {
-      case 'Feature':
-        const hasRadius = get(geometry, 'properties.radius')
-        const geomType = get(geometry, 'geometry.type')
-        return hasRadius && geomType === 'Point' ? 'Circle' : getEditMode(geometry.geometry)
-
-      default:
-        return geometry.type
-    }
-  }
-}
-
 function createDrawControl(featureGroup, entry) {
   console.log('createDrawControl: entry=', entry)
+  const color = entry && entry.color || '#ff0000'
 
-  const editMode = getEditModeForEntry(entry)
-  console.log('createDrawControl: editMode=', editMode)
-
-  // TODO use editMode to set the following as appropriate
-
-  let edit = null
-  let draw = null
-
-  if (editMode.edit) {
-    edit = {
-      featureGroup,
-      edit: {
-        selectedPathOptions: {
-          maintainColor: true,
-          fillOpacity: 0.3,
-        },
-        moveMarkers: true, // centroids, default: false
-        shapeOptions: {
-          color: '#ff0000',
-        },
+  const edit = {
+    featureGroup,
+    edit: {
+      selectedPathOptions: {
+        maintainColor: true,
+        fillOpacity: 0.3,
       },
-      poly: {
-        allowIntersection: false,
-        showArea: true,
+      moveMarkers: true, // centroids, default: false
+      shapeOptions: {
+        color: '#ff0000',
       },
-      remove: true,
-    }
+    },
+    poly: {
+      allowIntersection: false,
+      showArea: true,
+    },
+    remove: true,
   }
-  else if (editMode.draw) {
-    // TODO determine specific draw options:
 
-    const repeatMode = true
+  const repeatMode = true
+  const draw = {
+    circle: {
+      shapeOptions: {
+        color,
+        weight: 4,
+      },
+      showArea: true,
+    },
 
-    draw = {
-      circle: editMode.draw === 'Circle' ? {
-        shapeOptions: {
-          color: entry.color || '#f357a1',
-          weight: 4,
-        },
-        showArea: true,
-      } : null,
+    circlemarker: {
+      shapeOptions: {
+        weight: 4
+      },
+      repeatMode,
+    },
 
-      circlemarker: null/*{
-        shapeOptions: {
-          weight: 4
-        },
-        repeatMode,
-      }*/,
+    marker: {
+      repeatMode,
+    },
 
-      marker: null/*{
-        repeatMode,
-      }*/,
+    rectangle: {
+      shapeOptions: {
+        color,
+        weight: 4
+      },
+      showArea: true,
+    },
 
-      rectangle: editMode.draw === 'Rectangle' ?  {
-        shapeOptions: {
-          color: entry.color || '#ff0000',
-          weight: 4
-        },
-        showArea: true,
-      } : null,
+    polyline: {
+      shapeOptions: {
+        color,
+        weight: 4
+      },
+    },
 
-      polyline: editMode.draw === 'LineString' ? {
-        shapeOptions: {
-          color: entry.color || '#f357a1',
-          weight: 4
-        },
-      } : null,
-
-      polygon: editMode.draw === 'Polygon' ? {
-        allowIntersection: false, // Restricts shapes to simple polygons
-        drawError: {
-          color: '#e1e100', // Color the shape will turn when intersects
-        },
-        shapeOptions: {
-          color: entry.color || '#bada55'
-        },
-        showArea: true,
-      } : null,
-    }
+    polygon: {
+      allowIntersection: false, // Restricts shapes to simple polygons
+      drawError: {
+        color: '#e1e100', // Color the shape will turn when intersects
+      },
+      shapeOptions: {
+        color,
+      },
+      showArea: true,
+    },
   }
 
   const options = {
