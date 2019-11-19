@@ -82,7 +82,7 @@
   import find from 'lodash/find'
   import each from 'lodash/each'
 
-  const debug = true//window.location.search.match(/.*debug=.*qgeomap.*/)
+  const debug = window.location.search.match(/.*debug=.*qgeomap.*/)
 
   export default {
     name: 'qgeomap',
@@ -240,7 +240,7 @@
           layer.on('click', e => {
             L.DomEvent.stop(e)
             this.selectedFeature = e.target.feature
-            console.log("click: selectedFeature=", this.selectedFeature)
+            if (debug) console.log("click: selectedFeature=", this.selectedFeature)
             this._entrySelection(entry)
           })
 
@@ -256,11 +256,11 @@
       },
 
       removeEntry(entry_id) {
-        console.log("removeEntry: entry_id=", entry_id)
+        if (debug) console.log("removeEntry: entry_id=", entry_id)
         const index = findIndex(this.entries, {entry_id})
         if (index >= 0) {
           const [entry] = this.entries.splice(index, 1)
-          console.log("removeEntry: entry removed=", entry)
+          if (debug) console.log("removeEntry: entry removed=", entry)
         }
       },
 
@@ -272,10 +272,10 @@
         // TODO check any ongoing editing
 
         const entry = find(this.entries, {entry_id})
-        console.log("selectEntry: entry_id=", entry_id, 'entry=', entry)
+        if (debug) console.log("selectEntry: entry_id=", entry_id, 'entry=', entry)
         if (entry) {
           this.selectedFeature = entry.geometry
-          console.log("selectEntry: selectedFeature=", this.selectedFeature)
+          if (debug) console.log("selectEntry: selectedFeature=", this.selectedFeature)
           this._entrySelection(entry)
         }
         else return this._warning(`No entry to select by id: '${entry_id}'`)
@@ -286,7 +286,7 @@
           return this._warning('not editable')
         }
 
-        console.log("editEntry: entry_id=", entry_id)
+        if (debug) console.log("editEntry: entry_id=", entry_id)
         // TODO check any ongoing editing
 
         const entry = find(this.entries, {entry_id})
@@ -302,7 +302,7 @@
           return this._warning('not editable to add new geometry')
         }
 
-        console.log("editNew: geomType=", geomType, 'entry_id=', entry_id)
+        if (debug) console.log("editNew: geomType=", geomType, 'entry_id=', entry_id)
 
         const entry = {
           entry_id,
@@ -323,7 +323,7 @@
       },
 
       _entrySelection(entry) {
-        console.log("_entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
+        if (debug) console.log("_entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
 
         this.showCoordsTableDialog = true
 
@@ -355,11 +355,11 @@
       },
 
       _startEditing() {
-        console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
+        if (debug) console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
 
         if (this.selectedEntry) {
           this._findAndExtractEntry(this.selectedEntry.entry_id)
-          console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
+          if (debug) console.log('_startEditing:', 'selectedEntry=', this.selectedEntry)
           this._setEntriesInteractive(false)
           this.mapMan.startEditing(this.selectedEntry)
         }
@@ -382,11 +382,11 @@
 
       _applyEdits() {
         const prevEntry = this.mapMan.endEditing()
-        console.log("_applyEdits: prevEntry=", prevEntry)
+        if (debug) console.log("_applyEdits: prevEntry=", prevEntry)
         if (prevEntry) {
           let {entryEdited, geometry} = prevEntry
 
-          console.log('updating geometry to', cloneDeep(geometry))
+          if (debug) console.log('updating geometry to', cloneDeep(geometry))
 
           if (geometry.type === 'FeatureCollection') {
             if (geometry.features.length === 1) {
@@ -410,7 +410,7 @@
 
       _cancelEdits() {
         const prevEntry = this.mapMan.endEditing()
-        console.log("_cancelEdits: prevEntry=", prevEntry)
+        if (debug) console.log("_cancelEdits: prevEntry=", prevEntry)
         if (prevEntry) {
           const {entryEdited} = prevEntry
           this.entries.push(entryEdited)
@@ -490,7 +490,7 @@
       },
 
       _centerMapAt(latLon) {
-        console.log('_centerMapAt', latLon)
+        if (debug) console.log('_centerMapAt', latLon)
         this.center = latLon
       },
 

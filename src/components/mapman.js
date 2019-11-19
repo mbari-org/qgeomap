@@ -42,47 +42,47 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
   let drawControl = null
 
   map.on(L.Draw.Event.CREATED, e => {
-    console.warn('L.Draw.Event.CREATED', e)
+    if (debug) console.warn('L.Draw.Event.CREATED', e)
     drawFeatureGroup.addLayer(e.layer)
   })
 
   map.on(L.Draw.Event.DELETED, e => {
     e.layers.eachLayer(layer => {
-      console.warn('L.Draw.Event.DELETED layer=', layer)
+      if (debug) console.warn('L.Draw.Event.DELETED layer=', layer)
       drawFeatureGroup.removeLayer(layer)
     })
   })
 
   map.on(L.Draw.Event.DRAWSTART, e => {
-    console.warn('L.Draw.Event.DRAWSTART', e)
+    if (debug) console.warn('L.Draw.Event.DRAWSTART', e)
   })
 
   map.on(L.Draw.Event.DRAWSTOP, e => {
-    console.warn('L.Draw.Event.DRAWSTOP', e)
+    if (debug) console.warn('L.Draw.Event.DRAWSTOP', e)
   })
 
   map.on(L.Draw.Event.DRAWVERTEX, e => {
-    console.warn('L.Draw.Event.DRAWVERTEX', e)
+    if (debug) console.warn('L.Draw.Event.DRAWVERTEX', e)
   })
 
   map.on(L.Draw.Event.EDITSTART, e => {
-    console.warn('L.Draw.Event.EDITSTART', e)
+    if (debug) console.warn('L.Draw.Event.EDITSTART', e)
   })
 
   map.on(L.Draw.Event.EDITMOVE, e => {
-    console.warn('L.Draw.Event.EDITMOVE', e)
+    if (debug) console.warn('L.Draw.Event.EDITMOVE', e)
   })
 
   map.on(L.Draw.Event.EDITRESIZE, e => {
-    console.warn('L.Draw.Event.EDITRESIZE', e)
+    if (debug) console.warn('L.Draw.Event.EDITRESIZE', e)
   })
 
   map.on(L.Draw.Event.EDITVERTEX, e => {
-    console.warn('L.Draw.Event.EDITVERTEX', e)
+    if (debug) console.warn('L.Draw.Event.EDITVERTEX', e)
   })
 
   map.on(L.Draw.Event.EDITSTOP, e => {
-    console.warn('L.Draw.Event.EDITSTOP', e)
+    if (debug) console.warn('L.Draw.Event.EDITSTOP', e)
   })
 
   return {
@@ -139,7 +139,7 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
   function drawGroupToGeoJSON() {
     const layers = []
     drawFeatureGroup.eachLayer(layer => {
-      console.warn('drawGroupToGeoJSON', 'layer=', layer)
+      if (debug) console.warn('drawGroupToGeoJSON', 'layer=', layer)
       if (layer.getRadius) {
         const radius = layer.getRadius()
         const coordinates = L.GeoJSON.latLngToCoords(layer.getLatLng())
@@ -163,7 +163,7 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
   }
 
   function addLayersToDraw(entry) {
-    console.warn('addLayersToDraw: entry=', entry)
+    if (debug) console.warn('addLayersToDraw: entry=', entry)
 
     const entryLayer = geometryToLayer(entry, entry.geometry)
     addNonGroupLayers(entryLayer, drawFeatureGroup)
@@ -185,7 +185,7 @@ function createMapMan(map, drawFeatureGroup, initialBaseLayerName, googleApiKey)
 }
 
 function createDrawControl(featureGroup, entry) {
-  console.log('createDrawControl: entry=', entry)
+  if (debug) console.log('createDrawControl: entry=', entry)
   const color = entry && entry.color || '#ff0000'
 
   const edit = {
