@@ -1,5 +1,6 @@
 2019-11
 
+- starting to "normalize" feature to make handling more consistent
 - for convenience at the moment, simplify editing logic: 
   include most edit/draw options in general and delegate on client 
   for any further restrictions

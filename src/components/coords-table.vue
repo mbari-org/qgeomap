@@ -2,7 +2,7 @@
   <div class="bg-blue-1 q-pb-xs">
     <q-toolbar class="bg-primary text-white q-mb-sm">
       <q-toolbar-title style="font-size:1em">
-        {{ entry.entry_id }}
+        <span>{{ title }}</span>
         <q-tooltip>
           {{ displayType }}
         </q-tooltip>
@@ -120,10 +120,12 @@
           <div>m</div>
         </div>
 
-        <pre
-          v-if="debugFeature"
-          style="font-size: smaller" class="bg-grey-1"
-        >feature={{feature}}</pre>
+        <q-dialog v-if="debugFeature" value seamless position="right">
+          <q-scroll-area style="height:700px;width:300px" class="bg-grey-1 shadow-7">
+            <pre style="font-size:0.8em" class="q-pa-md"
+            >coords-table feature={{feature}}</pre>
+          </q-scroll-area>
+        </q-dialog>
       </div>
     </form>
   </div>
@@ -135,16 +137,17 @@
   import map from 'lodash/map'
   import get from 'lodash/get'
   import set from 'lodash/set'
+  import filter from 'lodash/filter'
 
-  const debug = true//window.location.search.match(/.*debug=.*qgeomap.*/)
+  const debug = window.location.search.match(/.*debug=.*qgeomap.*/)
 
   export default {
     name: 'coords-table',
 
     props: {
-      entry: {
-        type: Object,
-        required: true,
+      title: {
+        type: String,
+        default: '',
       },
 
       feature: {
@@ -176,31 +179,29 @@
       },
     },
 
-    data () {
-      return {
-        debug,
+    data: () => ({
+      debug,
 
-        originalFeature: null,
+      originalFeature: null,
 
-        error: null,
-        status: null,
+      error: null,
+      status: null,
 
-        tableData: [],
-        columns: [
-          {name: 'centerCol', field: 'centerCol', label: '', align: 'center'},
-          {name: 'latitude', field: 'latitude', label: 'Lat', align: 'left'},
-          {name: 'longitude', field: 'longitude', label: 'Lon', align: 'left'},
-        ],
-        rowsPerPage: [0],
-        pagination: {
-          rowsPerPage: 0
-        },
+      tableData: [],
+      columns: [
+        {name: 'centerCol', field: 'centerCol', label: '', align: 'center'},
+        {name: 'latitude', field: 'latitude', label: 'Lat', align: 'left'},
+        {name: 'longitude', field: 'longitude', label: 'Lon', align: 'left'},
+      ],
+      rowsPerPage: [0],
+      pagination: {
+        rowsPerPage: 0
+      },
 
-        radius: null,
-        errorRadius: false,
-        errorMessageRadius: null,
-      }
-    },
+      radius: null,
+      errorRadius: false,
+      errorMessageRadius: null,
+    }),
 
     mounted() {
       this.reflectInputs()
@@ -208,7 +209,7 @@
 
     methods: {
       reflectInputs() {
-        console.log('reflectInputs:', 'feature=', this.feature, 'entry=', this.entry)
+        if (debug) console.log('reflectInputs:', 'feature=', this.feature, 'title=', this.title)
 
         this.originalFeature = cloneDeep(this.feature)
 
@@ -221,28 +222,35 @@
       getTableData() {
         // console.log('getTableData: feature=', cloneDeep(this.feature))
 
+        const feature = normalizeFeature(this.feature)
         this.radius = null
         let list = []
-        if (this.feature && this.feature.geometry) {
-          // console.log(`getTableData: type=${this.feature.geometry.type}`,
-          //   'coordinates=', this.feature.geometry.coordinates
+        if (feature && feature.geometry) {
+          // console.log(`getTableData: type=${feature.geometry.type}`,
+          //   'coordinates=', feature.geometry.coordinates
           // )
 
-          switch (this.feature.geometry.type) {
+          switch (feature.geometry.type) {
             case 'Polygon': {
-              list = this.feature.geometry.coordinates[0]
+              list = feature.geometry.coordinates[0]
               break
             }
 
             case 'LineString': {
-              list = this.feature.geometry.coordinates
+              list = feature.geometry.coordinates
               break
             }
 
             case 'Point': {
-              list = [this.feature.geometry.coordinates]
+              list = [feature.geometry.coordinates]
 
-              this.radius = get(this.feature, 'properties.radius') || null
+              this.radius = get(feature, 'properties.radius') || null
+              break
+            }
+
+            case 'MultiPoint': {
+              if (debug) console.log('::::MultiPoint feature=', feature)
+              list = feature.geometry.coordinates
               break
             }
           }
@@ -253,13 +261,13 @@
       },
 
       updateFeature() {
-        console.log('updateFeature, this.feature=', this.feature)
+        if (debug) console.log('updateFeature, this.feature=', this.feature)
 
         const lonlats = map(this.tableData, ({latitude, longitude}) =>
           [longitude, latitude]
         )
 
-        const updatedFeature = cloneDeep(this.feature)
+        let updatedFeature = normalizeFeature(this.feature)
 
         if (this.feature.geometry) {
           switch (this.feature.geometry.type) {
@@ -278,6 +286,11 @@
               if (this.radius !== null && this.radius > 0) {
                 set(updatedFeature, 'properties.radius', +this.radius.toFixed(2))
               }
+              break
+            }
+
+            case 'MultiPoint': {
+              updatedFeature.geometry.coordinates = lonlats
               break
             }
           }
@@ -331,6 +344,33 @@
         this.updateFeature()
       },
     },
+  }
+
+  function normalizeFeature(feature) {
+    if (feature && feature.type === 'FeatureCollection') {
+      return convertFeatureCollection(feature)
+    }
+    else return cloneDeep(feature)
+  }
+
+  function convertFeatureCollection(feature) {
+    if (debug) console.log('convertFeatureCollection feature=', feature)
+    const geometries = map(feature.features, 'geometry')
+    const points = filter(geometries, {type: 'Point'})
+    if (debug) console.warn('convertFeatureCollection', 'points=', points)
+
+    // all 'Point's?
+    if (points && points.length && geometries.length) {
+      const lonlats = map(points, 'coordinates')
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'MultiPoint',
+          coordinates: lonlats
+        },
+      }
+    }
+    // TODO other cases: collection of Polygon, etc
   }
 </script>
 

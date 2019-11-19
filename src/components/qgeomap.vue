@@ -24,7 +24,7 @@
             :value="includeTable && selectedEntry && !!selectedFeature && showCoordsTableDialog"
           >
             <coords-table
-              :entry="selectedEntry"
+              :title="selectedEntry && selectedEntry.entry_id"
               :feature="selectedFeature"
               :editable="editable && !isEditing()"
               :debug-feature="debugFeature"
@@ -64,8 +64,6 @@
   import MapButtons from '@mbari/quasar-app-extension-qgeomap/src/components/map-buttons'
   import MousePosMarker from '@mbari/quasar-app-extension-qgeomap/src/components/mouse-pos-marker'
   import CoordsTable from '@mbari/quasar-app-extension-qgeomap/src/components/coords-table'
-
-  // import Vue2LeafletGoogleMutant from 'vue2-leaflet-googlemutant'
 
   import {
     LMap,
