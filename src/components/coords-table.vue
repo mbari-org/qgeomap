@@ -223,13 +223,16 @@
         // console.log('getTableData: feature=', cloneDeep(this.feature))
 
         const feature = normalizeFeature(this.feature)
+        // console.log(`getTableData:`,
+        //     'feature.type=', this.feature.type,
+        //     'feature.geometry=', this.feature.geometry,
+        //     'feature.geometry.type=', this.feature.geometry && this.feature.geometry.type,
+        //     'feature.geometry.coordinates=', this.feature.geometry && this.feature.geometry.coordinates
+        // )
+
         this.radius = null
         let list = []
         if (feature && feature.geometry) {
-          // console.log(`getTableData: type=${feature.geometry.type}`,
-          //   'coordinates=', feature.geometry.coordinates
-          // )
-
           switch (feature.geometry.type) {
             case 'Polygon': {
               list = feature.geometry.coordinates[0]
