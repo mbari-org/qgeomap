@@ -132,8 +132,8 @@
       },
 
       debugFeature: {
-        type: Boolean,
-        default: false
+        type: String,  // position
+        default: null
       },
     },
 

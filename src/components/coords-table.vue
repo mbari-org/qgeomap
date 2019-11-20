@@ -120,7 +120,7 @@
           <div>m</div>
         </div>
 
-        <q-dialog v-if="debugFeature" value seamless position="right">
+        <q-dialog v-if="debugFeature" value seamless :position="debugFeature">
           <q-scroll-area style="height:700px;width:300px" class="bg-grey-1 shadow-7">
             <pre style="font-size:0.8em" class="q-pa-md"
             >coords-table feature={{feature}}</pre>
@@ -166,8 +166,8 @@
       },
 
       debugFeature: {
-        type: Boolean,
-        default: false
+        type: String,  // position
+        default: null
       },
     },
 
