@@ -1,3 +1,9 @@
+2020-06
+
+- minor adjustment as preparation for newer @quasar/app version
+- spent quite some time with the q-window extension but was taking too much time to make
+  it work (along with mxm), probably because of the extension-using-extension aspect(?)
+
 2019-11
 
 - starting to "normalize" feature to make handling more consistent

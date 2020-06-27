@@ -1,6 +1,6 @@
 {
   "name": "@mbari/quasar-app-extension-qgeomap",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Quasar App Extension for geometry viewing and editing",
   "author": "Carlos Rueda <carueda@mbari.org>",
   "license": "MIT",
