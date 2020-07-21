@@ -1,3 +1,7 @@
+2020-07
+
+- q-layout for qgeomap, with a drawer for coords-table
+
 2020-06
 
 - minor adjustment as preparation for newer @quasar/app version

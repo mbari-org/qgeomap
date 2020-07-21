@@ -1,62 +1,88 @@
 <template>
-  <div style="height:100%; width:100%">
-    <div class="gjMap fit">
-      <l-map
-        ref="gjMap"
-        :zoom="zoom"
-        :center="center"
-        :options="{zoomControl:false, attributionControl: false}"
+  <div>
+    <q-layout
+      view="lhh LpR lff"
+      container
+      :style="sizeInfo.containerStyle"
+      class="shadow-2 rounded-borders"
+    >
+      <q-header reveal class="bg-primary glossy">
+        <q-toolbar>
+          <q-toolbar-title>{{ label }}</q-toolbar-title>
+          <q-btn flat dense icon="menu" @click="drawerRight = !drawerRight" />
+        </q-toolbar>
+      </q-header>
+
+      <div style="height:50px">filler</div>
+
+      <div :style="sizeInfo.qgeomapStyle">
+        <div class="gjMap fit">
+          <l-map
+            ref="gjMap"
+            :zoom="zoom"
+            :center="center"
+            :options="{zoomControl:false, attributionControl: false}"
+          >
+            <map-buttons
+              :editable="editable"
+              :selection-for-editing="!!selectedEntry"
+              :is-editing="isEditing()"
+              v-on:doZoom="_doZoom"
+              v-on:zoomToAll="zoomToAll"
+              v-on:zoomToAllSelected="zoomToAllSelected"
+              v-on:startEditing="_startEditing"
+              v-on:applyEdits="_applyEdits"
+              v-on:cancelEdits="_cancelEdits"
+            />
+
+            <l-feature-group ref="staticFeatureGroup">
+              <l-geo-json
+                v-for="(entry, index) in entries"
+                :key="`entry_${index}`"
+                :ref="`entry_${index}`"
+                :geojson="entry.geometry"
+                :options="entry.options"
+              >
+              </l-geo-json>
+            </l-feature-group>
+
+            <l-feature-group ref="drawFeatureGroup">
+            </l-feature-group>
+
+            <slot name="map-body">
+              <mouse-pos-marker
+                :mouse-pos="mousePosFromCoordsTable || mousePos"
+              />
+            </slot>
+          </l-map>
+        </div>
+      </div>
+
+      <q-drawer
+        side="right"
+        :value="drawerRight && selectedEntry && !!selectedFeature"
+        bordered
+        :width="200"
+        :breakpoint="500"
+        content-class="bg-primary"
       >
-        <map-buttons
-          :editable="editable"
-          :selection-for-editing="!!selectedEntry"
-          :is-editing="isEditing()"
-          v-on:doZoom="_doZoom"
-          v-on:zoomToAll="zoomToAll"
-          v-on:zoomToAllSelected="zoomToAllSelected"
-          v-on:startEditing="_startEditing"
-          v-on:applyEdits="_applyEdits"
-          v-on:cancelEdits="_cancelEdits"
-        >
-          <q-dialog
-            seamless
-            :position="tablePosition"
-            :value="includeTable && selectedEntry && !!selectedFeature && showCoordsTableDialog"
+        <q-scroll-area class="fit">
+          <div
+            v-if="drawerRight && selectedEntry && !!selectedFeature"
           >
             <coords-table
-              :title="selectedEntry && selectedEntry.entry_id"
               :feature="selectedFeature"
               :editable="editable && !isEditing()"
               :debug-feature="debugFeature"
               v-on:mousePos="_mousePosFromCoordsTable"
               v-on:centerMapAt="_centerMapAt"
               v-on:updatedFeature="_updatedFeature"
-              closable v-on:closing="showCoordsTableDialog = false"
             />
-          </q-dialog>
-        </map-buttons>
+          </div>
+        </q-scroll-area>
+      </q-drawer>
+    </q-layout>
 
-        <l-feature-group ref="staticFeatureGroup">
-          <l-geo-json
-            v-for="(entry, index) in entries"
-            :key="`entry_${index}`"
-            :ref="`entry_${index}`"
-            :geojson="entry.geometry"
-            :options="entry.options"
-          >
-          </l-geo-json>
-        </l-feature-group>
-
-        <l-feature-group ref="drawFeatureGroup">
-        </l-feature-group>
-
-        <slot name="map-body">
-          <mouse-pos-marker
-            :mouse-pos="mousePosFromCoordsTable || mousePos"
-          />
-        </slot>
-      </l-map>
-    </div>
   </div>
 </template>
 
@@ -116,6 +142,11 @@
         default: false
       },
 
+      label: {
+        type: String,
+        default: ''
+      },
+
       includeTable: {
         type: Boolean,
         default: false
@@ -141,6 +172,8 @@
       center: [36.83, -121.9],
       zoom: 10,
 
+      drawerRight: true,
+
       selectedEntry: null,
       selectedFeature: null,
 
@@ -148,8 +181,19 @@
 
       mousePosFromCoordsTable: null,
       coordsTableEditable: false,
-      showCoordsTableDialog: true, // one of the conditions.
     }),
+
+    computed: {
+      sizeInfo() {
+        return this.editable ? {
+          containerStyle: 'height:600px;width:700px',
+          qgeomapStyle: 'height:550px;width:700px',
+        } : {
+          containerStyle: 'height:600px;width:700px',
+          qgeomapStyle: 'height:550px;width:700px',
+        }
+      },
+    },
 
     mounted() {
       // this.setFeatureData(this.value)
@@ -322,8 +366,6 @@
 
       _entrySelection(entry) {
         if (debug) console.log("_entrySelection: entry=", entry, 'selectedEntry=', this.selectedEntry)
-
-        this.showCoordsTableDialog = true
 
         if (this.isEditing()) {
           // TODO proper handling if editing

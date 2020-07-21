@@ -1,6 +1,9 @@
 <template>
-  <div class="bg-blue-1 q-pb-xs">
-    <q-toolbar class="bg-primary text-white q-mb-sm">
+  <div class="bg-primary">
+    <q-toolbar
+      v-if="title || closable"
+      class="bg-primary text-white"
+    >
       <q-toolbar-title style="font-size:1em">
         <span>{{ title }}</span>
         <q-tooltip>
@@ -17,9 +20,8 @@
       </q-btn>
     </q-toolbar>
 
-    <form class="q-ma-xs">
-
-      <div class="column q-gutter-md">
+    <form>
+      <div class="column q-gutter-y-md">
         <div>
           <div v-if="radius !== null" class="text-bold">Center:</div>
           <q-table
