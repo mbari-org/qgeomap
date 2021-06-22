@@ -1,3 +1,7 @@
+2021-06
+
+- main is now the primary branch
+
 2020-07
 
 - q-layout for qgeomap, with a drawer for coords-table
