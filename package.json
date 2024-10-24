@@ -29,7 +29,7 @@
     "leaflet-mouse-position": "^1.2.0",
     "leaflet.gridlayer.googlemutant": "^0.8.0",
     "sass": "1.3.0",
-    "vue": "^2.6.10",
+    "vue": "^3.0.0",
     "vue2-leaflet": "^2.2.1",
     "vue2-leaflet-googlemutant": "^2.0.0"
   },
